@@ -27,7 +27,7 @@ from detectron2.data import transforms as T
 from torchvision.ops import nms
 import torch
 import supervision as sv
-from train_model import build_config
+from mrcnn_model import build_config
 
 def run_inference(cfg, predictor, img_path, img_name=None, cls_agnostic_nms=1.0, display=True, mask=True):
     print(img_path[-7:])
