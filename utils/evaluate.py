@@ -93,11 +93,11 @@ def evaluate_segmentations(model_polygons, gt_polygons, model_classes, gt_classe
         metrics["FP"] = sum(np.array(model_scores) > confidence_threshold) - metrics["TP"]
         metrics["FN"] = len(gt_classes) - metrics["TP"]
         if (metrics["TP"] + metrics["FP"]) <= 0:
-            metrics["precision"] = -1
+            metrics["precision"] = 0
         else:
             metrics["precision"] = metrics["TP"] / (metrics["TP"] + metrics["FP"])
         if (metrics["TP"] + metrics["FN"]) <= 0:
-            metrics["recall"] = -1
+            metrics["recall"] = 0
         else:
             metrics["recall"] = metrics["TP"] / (metrics["TP"] + metrics["FN"])
         return metrics
@@ -114,12 +114,12 @@ def evaluate_segmentations(model_polygons, gt_polygons, model_classes, gt_classe
                                 model_scores[v["max_match"]] > confidence_threshold])
             metric["FP"] = len([i for i in model_classes if i == cls]) - metric["TP"]
             metric["FN"] = len([i for i in gt_classes if i == cls]) - metric["TP"]
-            if (metric["TP"] + metric["FP"]) == 0:
+            if (metric["TP"] + metric["FP"]) <= 0:
                 metric["precision"] = 0
             else:
                 metric["precision"] = metric["TP"] / (metric["TP"] + metric["FP"])
 
-            if (metric["TP"] + metric["FN"]) == 0:
+            if (metric["TP"] + metric["FN"]) <= 0:
                 metric["recall"] = 0
             else:
                 metric["recall"] = metric["TP"] / (metric["TP"] + metric["FN"])
