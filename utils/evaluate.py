@@ -115,12 +115,12 @@ def evaluate_segmentations(model_polygons, gt_polygons, model_classes, gt_classe
             metric["FP"] = len([i for i in model_classes if i == cls]) - metric["TP"]
             metric["FN"] = len([i for i in gt_classes if i == cls]) - metric["TP"]
             if (metric["TP"] + metric["FP"]) == 0:
-                metric["precision"] = -1
+                metric["precision"] = 0
             else:
                 metric["precision"] = metric["TP"] / (metric["TP"] + metric["FP"])
 
             if (metric["TP"] + metric["FN"]) == 0:
-                metric["recall"] = -1
+                metric["recall"] = 0
             else:
                 metric["recall"] = metric["TP"] / (metric["TP"] + metric["FN"])
 
