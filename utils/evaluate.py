@@ -89,7 +89,7 @@ def evaluate_segmentations(model_polygons, gt_polygons, model_classes, gt_classe
                               if v["max_match"] >= 0 and
                               model_scores[v["max_match"]] > confidence_threshold]),
                    "FP": 0, "TN": 0, "FN": 0}
-        metrics["FP"] = len(model_classes) - metrics["TP"]
+        metrics["FP"] = sum(np.array(model_scores) > confidence_threshold) - metrics["TP"]
         metrics["FN"] = len(gt_classes) - metrics["TP"]
         metrics["precision"] = metrics["TP"] / (metrics["TP"] + metrics["FP"])
         metrics["recall"] = metrics["TP"] / (metrics["TP"] + metrics["FN"])
