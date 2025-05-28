@@ -1,14 +1,13 @@
 import json
 import cv2
 import numpy as np
-import torch
 from matplotlib import pyplot as plt
 from shapely.geometry.polygon import Polygon
-import supervision as sv
-from utils.coco import extract_annotations, rle_to_coco
-from pycocotools.coco import COCO
+from utils.coco import extract_annotations
 
 def format_gt(annotations_path, image_id, image_path=None, verbose=False):
+    # Loads ground truth annotations and converts them into a list of polygons and corresponding classes.
+
     with open(annotations_path, 'r') as file:
         data = json.load(file)
     gt_annotations = extract_annotations(data["annotations"], image_id)
@@ -55,6 +54,8 @@ def format_gt(annotations_path, image_id, image_path=None, verbose=False):
 
 def evaluate_segmentations(model_polygons, gt_polygons, model_classes, gt_classes, model_scores,
                            iou_threshold=0.5, confidence_threshold=0.05, cls_agnostic=False):
+    # Calculates the IoU between the model segmentations and ground truth segmentations (in the format of polygons).
+
     matches = {}
     for gt_idx, gt_polygon in enumerate(gt_polygons):
         matches[gt_idx] = {}
@@ -91,8 +92,14 @@ def evaluate_segmentations(model_polygons, gt_polygons, model_classes, gt_classe
                    "FP": 0, "TN": 0, "FN": 0}
         metrics["FP"] = sum(np.array(model_scores) > confidence_threshold) - metrics["TP"]
         metrics["FN"] = len(gt_classes) - metrics["TP"]
-        metrics["precision"] = metrics["TP"] / (metrics["TP"] + metrics["FP"])
-        metrics["recall"] = metrics["TP"] / (metrics["TP"] + metrics["FN"])
+        if (metrics["TP"] + metrics["FP"]) <= 0:
+            metrics["precision"] = -1
+        else:
+            metrics["precision"] = metrics["TP"] / (metrics["TP"] + metrics["FP"])
+        if (metrics["TP"] + metrics["FN"]) <= 0:
+            metrics["recall"] = -1
+        else:
+            metrics["recall"] = metrics["TP"] / (metrics["TP"] + metrics["FN"])
         return metrics
     else:
         metrics = {"viable": {"TP": 0, "FP": 0, "TN": 0, "FN": 0},
