@@ -25,6 +25,7 @@ def yolo_to_coco_evaluation(model, cls_agnostic=True):
     test = "../../datasets/dataset1/coco/postqc_model_data/test.json"
     val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
     cfg = build_config(image_path, train, test, val)
+    # TODO: Should the second argument here not be `tasks = 'segm'`? I'm not sure cfg is correct
     evaluator = COCOEvaluator("orchid_val", cfg, False, max_dets_per_image=800)
     evaluator.reset()
 
