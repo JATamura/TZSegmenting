@@ -1,7 +1,6 @@
 import importlib
 import cv2
 import os
-
 import numpy as np
 import supervision as sv
 import torch
@@ -42,32 +41,23 @@ def mask_nms(masks, scores, nms_threshold=0.5):
                 order.remove(j)
     return keep
 
-def inference(predictor, image_path, cls_agnostic_nms=0.5, mask=False):
-    im = cv2.imread(image_path)
-    if im is not None:
-        pred = predictor(im)
-
-        if mask:
-            # print("Applying mask NMS")
-            # nms_results = nms(pred["instances"].pred_boxes.tensor,
-            #                   pred["instances"].scores, cls_agnostic_nms)
-            # print(nms_results)
-            nms_indices = mask_nms(pred["instances"].pred_masks.numpy()[nms_results],
-                                   pred["instances"]._fields["scores"][nms_results], cls_agnostic_nms)
-        else:
-            # print("Applying box NMS")
-            nms_indices = nms(pred["instances"].pred_boxes.tensor,
-                              pred["instances"].scores, cls_agnostic_nms)
-
-        pred = {"instances": Instances(image_size=pred["instances"].image_size,
-                                       pred_boxes=pred["instances"].pred_boxes[nms_indices],
-                                       scores=pred["instances"].scores[nms_indices],
-                                       pred_classes=pred["instances"].pred_classes[nms_indices]+1,
-                                       pred_masks=pred["instances"].pred_masks[nms_indices])}
-
-        return pred
+def apply_nms(prediction, cls_agnostic_nms=0.5, mask=False):
+    if mask:
+        # print("Applying mask NMS")
+        nms_indices = mask_nms(prediction["instances"].pred_masks.numpy(),
+                               prediction["instances"]._fields["scores"], cls_agnostic_nms)
     else:
-        return None
+        # print("Applying box NMS")
+        nms_indices = nms(prediction["instances"].pred_boxes.tensor,
+                          prediction["instances"].scores, cls_agnostic_nms)
+
+    pred = {"instances": Instances(image_size=prediction["instances"].image_size,
+                                   pred_boxes=prediction["instances"].pred_boxes[nms_indices],
+                                   scores=prediction["instances"].scores[nms_indices],
+                                   pred_classes=prediction["instances"].pred_classes[nms_indices]+1,
+                                   pred_masks=prediction["instances"].pred_masks[nms_indices])}
+
+    return pred
 
 def display_predictions(cfg, pred, im, img_name="", mask=True):
     fig, ax = plt.subplots()
@@ -120,9 +110,9 @@ if __name__ == "__main__":
     #                  cls_agnostic_nms=0.5, mask=False)
     # display_predictions(cfg, pred, im=cv2.imread("../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg"),
     #                     img_name="box")
-    pred = inference(predictor,
-                     "../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg",
-                     cls_agnostic_nms=0.5, mask=True)
+    img = cv2.imread("../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg")
+    prediction = predictor(img)
+    pred = apply_nms(prediction, cls_agnostic_nms=0.5, mask=True)
     display_predictions(cfg, pred, im=cv2.imread("../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg"),
                         img_name="box_mask")
 

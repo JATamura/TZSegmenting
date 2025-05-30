@@ -7,11 +7,10 @@ sys.path.append("/mnt/shared/scratch/jtamura/BloombergOrchidProject")
 import cv2
 import matplotlib.pyplot as plt
 from detectron2.engine import DefaultPredictor
-from detectron2.data import build_detection_test_loader
-from detectron2.evaluation import COCOEvaluator, inference_on_dataset
+from detectron2.evaluation import COCOEvaluator
 # from mrcnn_model import build_config
-from model_weights.postqc_all_parts_4_classes.model_architecture import build_config
-from run_inference import inference, display_predictions
+from model_weights.output_02_05_no_freeze.model_architecture import build_config
+from run_inference import apply_nms
 from shapely.geometry import Polygon
 import supervision as sv
 import numpy as np
@@ -19,9 +18,7 @@ from utils.evaluate import format_gt, evaluate_segmentations
 import os
 import json
 
-def format_coco_predictions(predictor, image_path, cls_agnostic=1.0, verbose=False):
-    predictions = inference(predictor, image_path, cls_agnostic)
-
+def format_coco_predictions(predictions, image_path=None, cls_agnostic=1.0, verbose=False):
     model_classes = predictions["instances"].pred_classes.to("cpu").tolist()
     model_scores = predictions["instances"].scores.to("cpu").tolist()
     model_segmentations = np.array(predictions["instances"].pred_masks.to("cpu").tolist())
@@ -76,8 +73,7 @@ def in_built_eval(cfg, ids, cls_agn_nms=0.5):
 
     for img in evaluator._coco_api.dataset["images"]:
         print(img["file_name"])
-        coco_predictions = inference(predictor,
-                                     os.path.join(image_path, img["file_name"]),
+        coco_predictions = apply_nms(predictor(cv2.imread(os.path.join(image_path, img["file_name"]))),
                                      cls_agn_nms)
         print(coco_predictions)
         prediction = {"image_id": img["id"],
@@ -87,8 +83,6 @@ def in_built_eval(cfg, ids, cls_agn_nms=0.5):
     print(evaluator._predictions)
     results = evaluator.evaluate(img_ids=ids)
 
-    # test_loader = build_detection_test_loader(cfg, "orchid_val")
-    # results = inference_on_dataset(predictor.model, test_loader, evaluator)
     print(results)
     return results
 
@@ -98,7 +92,7 @@ if __name__ == "__main__":
     test = "../../datasets/dataset1/coco/postqc_model_data/test.json"
     val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
     annotations_path = "../../datasets/dataset1/coco/post_quality_check/all_postqc.json"
-    path_to_weights = "model_weights/postqc_all_parts_4_classes/model_final.pth"
+    path_to_weights = "model_weights/output_02_05_no_freeze/model_final.pth"
 
     confidence_thresholds = [i/100 for i in range(5, 100, 5)]
 
@@ -112,28 +106,24 @@ if __name__ == "__main__":
 
     with open(val, 'r') as file:
         val_data = json.load(file)
-    ids = [i["id"] for i in val_data["images"]]
 
     ## Evaluation using detectron2 evaluation (deconstructed to implement class agnostic nms if needed)
-    in_built_eval(cfg, ids, 0.5)
-    exit()
+    # ids = [i["id"] for i in val_data["images"]]
+    # in_built_eval(cfg, ids, 0.5)
+    # exit()
 
     ## Evaluation using my implementation
     iou_threshold = 0.5
     with open(val, 'r') as file:
         val_data = json.load(file)
 
-    for img in os.listdir("../../datasets/dataset1/BRIN_test_2"):
-        model_polygons, model_classes, model_scores = format_coco_predictions(predictor,
-                                                                          "../../datasets/dataset1/BRIN_test_2/" + img,
-                                                                          0.5, verbose=True)
-    exit()
-
     for cls_iou_thresh in [0.5, 1.0]:
+        img_precisions = {}
         for img in val_data["images"]:
             print(img["file_name"] + " mAP50:")
+            prediction = apply_nms(predictor(cv2.imread(img)))
 
-            model_polygons, model_classes, model_scores = format_coco_predictions(predictor,
+            model_polygons, model_classes, model_scores = format_coco_predictions(prediction,
                                                                                   os.path.join(image_path, img["file_name"]),
                                                                                   cls_iou_thresh, verbose=False)
 
