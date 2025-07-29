@@ -308,44 +308,44 @@ if __name__ == "__main__":
 
     # Merge five part datasets into one
 
-    # print("Combining datasets")
-    #
-    # datasets_to_merge = ["../datasets/dataset1/coco/pre_quality_check/part1_preqc.json",
-    #                      "../datasets/dataset1/coco/pre_quality_check/part2_preqc.json",
-    #                      "../datasets/dataset1/coco/pre_quality_check/part3_preqc.json",
-    #                      "../datasets/dataset1/coco/pre_quality_check/part4_preqc.json",
-    #                      "../datasets/dataset1/coco/pre_quality_check/part5_preqc.json"]
-    # output_path = "../datasets/dataset1/coco/pre_quality_check/all_preqc.json"
-    # combine_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
-    #
-    # datasets_to_merge = ["../datasets/dataset1/coco/post_quality_check/part1_postqc.json",
-    #                      "../datasets/dataset1/coco/post_quality_check/part2_postqc.json",
-    #                      "../datasets/dataset1/coco/post_quality_check/part3_postqc.json",
-    #                      "../datasets/dataset1/coco/post_quality_check/part4_postqc.json",
-    #                      "../datasets/dataset1/coco/post_quality_check/part5_postqc.json"]
-    # output_path = "../datasets/dataset1/coco/post_quality_check/all_postqc.json"
-    # combine_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
-    #
-    # # ...and corresponding checks (duplicate datasets used for agreement analysis)
-    # datasets_to_merge = ["../datasets/dataset1/coco/check_1/part1_check1.json",
-    #                      "../datasets/dataset1/coco/check_1/part2_check1.json",
-    #                      "../datasets/dataset1/coco/check_1/part3_check1.json",
-    #                      "../datasets/dataset1/coco/check_1/part4_check1.json",
-    #                      "../datasets/dataset1/coco/check_1/part5_check1.json"]
-    # output_path = "../datasets/dataset1/coco/check_1/all_check1.json"
-    # combine_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
-    #
-    # datasets_to_merge = ["../datasets/dataset1/coco/check_2/part1_check2.json",
-    #                      "../datasets/dataset1/coco/check_2/part2_check2.json",
-    #                      "../datasets/dataset1/coco/check_2/part3_check2.json",
-    #                      "../datasets/dataset1/coco/check_2/part4_check2.json",
-    #                      "../datasets/dataset1/coco/check_2/part5_check2.json"]
-    # output_path = "../datasets/dataset1/coco/check_2/all_check2.json"
-    # combine_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
+    print("Combining datasets")
+
+    datasets_to_merge = ["../datasets/dataset1/coco/pre_quality_check/part1_preqc.json",
+                         "../datasets/dataset1/coco/pre_quality_check/part2_preqc.json",
+                         "../datasets/dataset1/coco/pre_quality_check/part3_preqc.json",
+                         "../datasets/dataset1/coco/pre_quality_check/part4_preqc.json",
+                         "../datasets/dataset1/coco/pre_quality_check/part5_preqc.json"]
+    output_path = "../datasets/dataset1/coco/pre_quality_check/all_preqc.json"
+    combine_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
+
+    datasets_to_merge = ["../datasets/dataset1/coco/post_quality_check/part1_postqc.json",
+                         "../datasets/dataset1/coco/post_quality_check/part2_postqc.json",
+                         "../datasets/dataset1/coco/post_quality_check/part3_postqc.json",
+                         "../datasets/dataset1/coco/post_quality_check/part4_postqc.json",
+                         "../datasets/dataset1/coco/post_quality_check/part5_postqc.json"]
+    output_path = "../datasets/dataset1/coco/post_quality_check/all_postqc.json"
+    combine_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
+
+    # ...and corresponding checks (duplicate datasets used for agreement analysis)
+    datasets_to_merge = ["../datasets/dataset1/coco/check_1/part1_check1.json",
+                         "../datasets/dataset1/coco/check_1/part2_check1.json",
+                         "../datasets/dataset1/coco/check_1/part3_check1.json",
+                         "../datasets/dataset1/coco/check_1/part4_check1.json",
+                         "../datasets/dataset1/coco/check_1/part5_check1.json"]
+    output_path = "../datasets/dataset1/coco/check_1/all_check1.json"
+    combine_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
+
+    datasets_to_merge = ["../datasets/dataset1/coco/check_2/part1_check2.json",
+                         "../datasets/dataset1/coco/check_2/part2_check2.json",
+                         "../datasets/dataset1/coco/check_2/part3_check2.json",
+                         "../datasets/dataset1/coco/check_2/part4_check2.json",
+                         "../datasets/dataset1/coco/check_2/part5_check2.json"]
+    output_path = "../datasets/dataset1/coco/check_2/all_check2.json"
+    combine_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
 
     # ----------------------------------------------------------------------------
 
