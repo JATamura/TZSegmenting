@@ -1,2 +1,2 @@
 from .visualise import *
-from .stratifying import *
+from .configure_data import *

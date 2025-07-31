@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from shapely.geometry.polygon import Polygon
-from utils.coco import extract_annotations
+from utils.configure_data import extract_annotations
 
 
 def format_gt(annotations_path, image_id, image_path=None, verbose=False):

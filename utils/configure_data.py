@@ -228,13 +228,9 @@ def stratify(stats, test_ratio=0.2, val_ratio=0.2):
     return train, test, val
 
 # Splitting the dataset
-def train_test_split_coco(path_to_annotations, output_path, val_ratio=0.2, test_ratio=0.2,
-                          val_imgs=[], test_imgs=[], random_seed=None):
+def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
+                          train_imgs=[], val_imgs=[], test_imgs=[], random_seed=None):
 
-    if test_imgs is None:
-        test_imgs = []
-    if val_imgs is None:
-        val_imgs = []
     if random_seed != None:
         random.seed(random_seed)
 
@@ -246,7 +242,6 @@ def train_test_split_coco(path_to_annotations, output_path, val_ratio=0.2, test_
     all_imgs = []
     for img in all["images"]:
         all_imgs.append(img["file_name"])
-    train_imgs = copy.deepcopy(all_imgs)
 
     # randomly select test and validation images if no lists were given
     if len(test_imgs) == 0:
@@ -262,8 +257,11 @@ def train_test_split_coco(path_to_annotations, output_path, val_ratio=0.2, test_
                 img = random.choice(train_imgs)
             val_imgs.append(img)
 
-    for img in test_imgs + val_imgs:
-        train_imgs.remove(img)
+    # remove imgs selected for testing and validation if they were randomised
+    if len(train_imgs) == 0:
+        train_imgs = copy.deepcopy(all_imgs)
+        for img in test_imgs + val_imgs:
+            train_imgs.remove(img)
 
     train = copy.deepcopy(all)
     test = copy.deepcopy(all)
@@ -304,12 +302,11 @@ def convert_iscrowd(dataset_path):
     with open(dataset_path, 'w') as file:
         json.dump(data, file)
 
-if __name__ == "__main__":
-
+def main():
     # Merge five part datasets into one
 
-    print("Combining datasets")
-
+    # print("Combining datasets")
+    #
     datasets_to_merge = ["../datasets/dataset1/coco/pre_quality_check/part1_preqc.json",
                          "../datasets/dataset1/coco/pre_quality_check/part2_preqc.json",
                          "../datasets/dataset1/coco/pre_quality_check/part3_preqc.json",
@@ -356,6 +353,7 @@ if __name__ == "__main__":
         "../datasets/dataset1/coco/post_quality_check/all_postqc.json"
     ]
 
+    # Use the post quality checked dataset for seed stats and stratification
     print("Loading full dataset")
     with open(dataset_path[1], 'r') as file:
         post_qc_dataset = json.load(file)
@@ -372,6 +370,7 @@ if __name__ == "__main__":
             imgs_with_issues.append((img["file_name"], len(annotations), img))
         if img["file_name"] == "481.jpg":
             imgs_with_issues.append((img["file_name"], len(annotations), img))
+
 
     for file_name, object_count, img in imgs_with_issues:
         print(file_name + " was removed. It had " + str(object_count) + " objects.")
@@ -405,8 +404,9 @@ if __name__ == "__main__":
             os.makedirs(coco_dir[i], exist_ok=True)
         print("Splitting dataset: " + coco_dir[i])
         # Splitting the data
-        train_set, val_set, test_set = train_test_split_coco(
-            dataset_path[i], coco_dir[i],
+        train_set, test_set, val_set = train_test_split_coco(
+            dataset_path[i],
+            train_imgs=list(train["file_names"].to_dict().values()),
             test_imgs=list(test["file_names"].to_dict().values()),
             val_imgs=list(val["file_names"].to_dict().values()),
             random_seed=42
@@ -421,7 +421,7 @@ if __name__ == "__main__":
             json.dump(val_set, outfile)
 
         # Convert the COCO datasets to YOLO
-        print("Converting dataset " + str(i) + " to YOLO")
+        print("Converting " + coco_dir[i] + " to YOLO")
         convert_coco(coco_dir[i], yolo_dir[i], use_segments=True, cls91to80=False)
 
         # Create directories for YOLO datasets
@@ -450,3 +450,5 @@ if __name__ == "__main__":
 
     print("Complete")
 
+if __name__ == "__main__":
+    main()

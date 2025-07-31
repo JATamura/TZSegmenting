@@ -10,7 +10,7 @@ import krippendorff
 import copy
 import pandas as pd
 from statsmodels.stats import inter_rater as irr
-from coco import extract_annotations, rle_to_coco
+from configure_data import extract_annotations, rle_to_coco
 from sklearn.metrics import confusion_matrix
 import seaborn as sn
 import itertools
