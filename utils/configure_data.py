@@ -69,8 +69,8 @@ def rle_to_coco(annotation: dict) -> list[dict]:
 def combine_datasets(path_to_annotations, output_path):
     """
     Used to combine the five part dataset into one.
-    :param      path_to_annotations (array string): File paths to COCO annotations
-    :param      output_path (string): Output path.
+    :param      path_to_annotations: (list string) File paths to COCO annotations
+    :param      output_path: (string) Output path.
     :return:
     """
     all_annotations = []
@@ -113,9 +113,9 @@ def combine_datasets(path_to_annotations, output_path):
 def extract_annotations(all_annotations, image_id):
     """
     Returns all annotations from an image using the image ID in the COCO dataset.
-    :param      all_annotations (dict): COCO dataset.
-    :param      image_id (int): Image ID.
-    :return     image_annotations (array dict): All annotations extracted from the specified image.
+    :param      all_annotations: (dict) COCO dataset.
+    :param      image_id: (int) Image ID.
+    :return     image_annotations: (list dict) All annotations extracted from the specified image.
     """
     image_annotations = []
     for annotation in all_annotations:
@@ -126,8 +126,8 @@ def extract_annotations(all_annotations, image_id):
 def avg_seg_size(annotations):
     """
     Calculates the average segmention/mask size. Used to stratify the dataset.
-    :param     annotations (dict array): Array of annotations in COCO format (usually from a single image).
-    :return    avg_area (float): Average segmentation/mask size of annotations.
+    :param     annotations: (dict list) List of annotations in COCO format (usually from a single image).
+    :return    avg_area: (float) Average segmentation/mask size of annotations.
     """
     areas = 0
     for a in annotations:
@@ -140,8 +140,8 @@ def avg_seg_size(annotations):
 def avg_bbox_size(annotations):
     """
     Calculates the average bbox size. Primarily used to gauge Mask R-CNN anchor sizes.
-    :param     annotations (dict array): Array of annotations in COCO format (usually from a single image).
-    :return    avg_bbox (float): Average bbox size of annotations.
+    :param     annotations: (dict list) List of annotations in COCO format (usually from a single image).
+    :return    avg_bbox: (float) Average bbox size of annotations.
     """
     areas = 0
     for a in annotations:
@@ -149,11 +149,11 @@ def avg_bbox_size(annotations):
     avg_bbox = areas / len(annotations)
     return avg_bbox
 
-def seed_stats(dataset):
+def seed_stats(dataset, output_path=None):
     """
     Calculate image-by-image statistics given a COCO dataset.
-    :param      dataset (dict): COCO dataset.
-    :return     stats (pandas.DataFrame): Image-by-image statistics.
+    :param      dataset: (dict) COCO dataset.
+    :return     stats: (pandas.DataFrame) Image-by-image statistics.
     """
 
     file_names = []
@@ -200,18 +200,21 @@ def seed_stats(dataset):
     # plt.ylabel('Number of images')
     # plt.show()
 
+    if output_path:
+        stats.describe(include="all").to_csv(os.path.join(output_path, "summary.csv"))
+
     return stats
 
 
 def stratify(stats, test_ratio=0.2, val_ratio=0.2):
     """
     Stratify the dataset using specific numerical values. Currently, uses the number of viable seeds and the average seed size in each image.
-    :param      stats (pandas.DataFrame): Image-by-image statistics of the dataset.
-    :param      test_ratio (float): Ratio of the dataset to split into the test set used for calculating final model performance.
-    :param      val_ratio (float): Ratio of the dataset to split into the validation set used for evaluating performance during training.
-    :return     train (pandas.DataFrame): Statistics of the images stratified into the training dataset.
-    :return     test (pandas.DataFrame): Statistics of the images stratified into the testing dataset.
-    :return     val (pandas.DataFrame): Statistics of the images stratified into the validation dataset.
+    :param      stats: (pandas.DataFrame) Image-by-image statistics of the dataset.
+    :param      test_ratio: (float) Ratio of the dataset to split into the test set used for calculating final model performance.
+    :param      val_ratio: (float) Ratio of the dataset to split into the validation set used for evaluating performance during training.
+    :return     train: (pandas.DataFrame) Statistics of the images stratified into the training dataset.
+    :return     test: (pandas.DataFrame) Statistics of the images stratified into the testing dataset.
+    :return     val: (pandas.DataFrame) Statistics of the images stratified into the validation dataset.
     """
     stats["stratify"] = (
         # stats["total_bin"].astype(str) + "_" +
@@ -233,17 +236,15 @@ def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
 
     if random_seed != None:
         random.seed(random_seed)
-
-    # load annotations
     with open(path_to_annotations, 'r') as file:
         all = json.load(file)
 
-    # list all file names
+    # List all file names
     all_imgs = []
     for img in all["images"]:
         all_imgs.append(img["file_name"])
 
-    # randomly select test and validation images if no lists were given
+    # Randomly select test and validation images if no lists were given
     if len(test_imgs) == 0:
         for i in range(int(len(all_imgs) * test_ratio)):
             img = random.choice(train_imgs)
@@ -257,7 +258,7 @@ def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
                 img = random.choice(train_imgs)
             val_imgs.append(img)
 
-    # remove imgs selected for testing and validation if they were randomised
+    # Remove images selected for testing and validation if they were randomised
     if len(train_imgs) == 0:
         train_imgs = copy.deepcopy(all_imgs)
         for img in test_imgs + val_imgs:
@@ -275,7 +276,7 @@ def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
         if not img["file_name"] in val_imgs:
             val["images"].remove(img)
 
-    # remove the appropriate annotations from the json file
+    # Remove the appropriate annotations from the json file
     train_ids = [img["id"] for img in train["images"]]
     test_ids = [img["id"] for img in test["images"]]
     val_ids = [img["id"] for img in val["images"]]
@@ -292,7 +293,7 @@ def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
 def convert_iscrowd(dataset_path):
     """
     Converts all iscrowd values to 0. Specific to the seeds dataset as seeds were never annotated in groups.
-    :param      dataset_path (string): Directory of the COCO dataset.
+    :param      dataset_path: (string) Directory of the COCO dataset.
     :return:
     """
     with open(dataset_path, 'r') as file:
@@ -305,8 +306,8 @@ def convert_iscrowd(dataset_path):
 def main():
     # Merge five part datasets into one
 
-    # print("Combining datasets")
-    #
+    print("Combining datasets")
+
     datasets_to_merge = ["../datasets/dataset1/coco/pre_quality_check/part1_preqc.json",
                          "../datasets/dataset1/coco/pre_quality_check/part2_preqc.json",
                          "../datasets/dataset1/coco/pre_quality_check/part3_preqc.json",
