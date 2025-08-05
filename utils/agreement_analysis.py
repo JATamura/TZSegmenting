@@ -84,8 +84,8 @@ def compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2, iou_threshold=0.5,
 
             # Calculate the intersect over union (IoU) of the two annotations using their polygons
             if a_1["polygon"].is_valid and a_2["polygon"].is_valid:
-                intersect = shapely.intersection_all([a_1["polygon"], a_2["polygon"]]).area
-                union = shapely.union_all([a_1["polygon"], a_2["polygon"]]).area
+                intersect = a_1["polygon"].intersection(a_2["polygon"]).area
+                union = a_1["polygon"].union(a_2["polygon"]).area
                 iou = intersect / union
 
                 # Change the highest IoU score and corresponding annotation accordingly
