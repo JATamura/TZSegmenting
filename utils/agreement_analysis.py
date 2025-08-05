@@ -11,6 +11,7 @@ from statsmodels.stats import inter_rater as irr
 from configure_data import extract_annotations
 import itertools
 
+
 def count_labels(dataset, search_cat=""):
     """
     Counts the number of objects with each category in a COCO dataset. Can also find images with objects of a specific category and count how many objects of that category are in each image.
@@ -37,6 +38,7 @@ def count_labels(dataset, search_cat=""):
     else:
         return [cat_num]
 
+
 def annotations_to_polygons(annotation_sets):
     """
     Converts a list of annotations from different COCO datasets to a nested array of dictionaries that hold the annotation and its corresponding polygon.
@@ -53,6 +55,7 @@ def annotations_to_polygons(annotation_sets):
             ann_to_polygon["polygon"] = polygon
             ann_to_polygon_sets[i].append(ann_to_polygon)
     return ann_to_polygon_sets
+
 
 def compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2, iou_threshold=0.5, image_name="", verbose=True):
     """
@@ -120,7 +123,9 @@ def compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2, iou_threshold=0.5,
         print("---------------")
     return same_label, different_label, undetected_label
 
-def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, iou_threshold=0.5, image_name="", verbose=True):
+
+def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, iou_threshold=0.5, image_name="",
+                          verbose=True):
     """
     Given 3 sets of annotations, counts the number of annotations with differing levels of agreement in segmentation and classification (see return values)
     :param      ann_to_polygon_1: (list dict) Annotations made by an annotator and their corresponding polygons. Assumes all segmentations are in COCO formatting and not RLE.
@@ -161,7 +166,8 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
                     for a_3 in ann_to_polygon_3:
                         # Calculate the intersect over union (IoU) for each combination of a_1, a_2, and a_3 using their polygons
                         if a_3["polygon"].is_valid:
-                            intersection = shapely.intersection_all([a_1["polygon"], a_2["polygon"], a_3["polygon"]]).area
+                            intersection = shapely.intersection_all(
+                                [a_1["polygon"], a_2["polygon"], a_3["polygon"]]).area
                             union = shapely.union_all([a_1["polygon"], a_2["polygon"], a_3["polygon"]]).area
                             iou = intersection / union
 
@@ -174,10 +180,13 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
         if max_iou > iou_threshold:
 
             # Append to same_label or diff_label according to the annotations' categories
-            if a_1["annotation"]["category_id"] == max_a_2["annotation"]["category_id"] == max_a_3["annotation"]["category_id"]:
-                same_label.append({"a_1":a_1["annotation"], "a_2":max_a_2["annotation"], "a_3":max_a_3["annotation"]})
+            if a_1["annotation"]["category_id"] == max_a_2["annotation"]["category_id"] == max_a_3["annotation"][
+                "category_id"]:
+                same_label.append(
+                    {"a_1": a_1["annotation"], "a_2": max_a_2["annotation"], "a_3": max_a_3["annotation"]})
             else:
-                different_label.append({"a_1":a_1["annotation"], "a_2":max_a_2["annotation"], "a_3":max_a_3["annotation"]})
+                different_label.append(
+                    {"a_1": a_1["annotation"], "a_2": max_a_2["annotation"], "a_3": max_a_3["annotation"]})
 
             # Remove the annotations with unanimous segmentation agreement from the pool of comparable annotations
             ann_to_polygon_1.remove(a_1)
@@ -192,7 +201,7 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
     # Run compare_annotations_2 for each combination of the 3 remaining sets (annotations_1 and annotations_2 here)
     same, different, undetected = compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2,
                                                         iou_threshold=iou_threshold,
-                                                        image_name=image_name+": a_1, a_2", verbose=verbose)
+                                                        image_name=image_name + ": a_1, a_2", verbose=verbose)
 
     # Append the matching annotation pairs to undetected and remove from the remaining pool accordingly
     for annotation_pair in (same + different):
@@ -205,7 +214,7 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
     # Repeat for annotations_1 and annotations_3
     same, different, undetected = compare_annotations_2(ann_to_polygon_1, ann_to_polygon_3,
                                                         iou_threshold=iou_threshold,
-                                                        image_name=image_name+": a_1, a_3", verbose=verbose)
+                                                        image_name=image_name + ": a_1, a_3", verbose=verbose)
     for annotation_pair in (same + different):
         undetected_label.append({"a_1": annotation_pair["a_1"], "a_2": None, "a_3": annotation_pair["a_2"]})
         if annotation_pair["a_1"] in annotations_1:
@@ -216,7 +225,7 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
     # Repeat for annotations_2 and annotations_3
     same, different, undetected = compare_annotations_2(ann_to_polygon_2, ann_to_polygon_3,
                                                         iou_threshold=iou_threshold,
-                                                        image_name=image_name+": a_2, a_3", verbose=verbose)
+                                                        image_name=image_name + ": a_2, a_3", verbose=verbose)
     for annotation_pair in (same + different):
         undetected_label.append({"a_1": None, "a_2": annotation_pair["a_1"], "a_3": annotation_pair["a_2"]})
         if annotation_pair["a_1"] in annotations_2:
@@ -239,6 +248,7 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
         print("Undetected: " + str(len(undetected_label)))
         print("-----------------")
     return same_label, different_label, undetected_label
+
 
 def create_agreement_matrix(compared_annotation_lists, num_annotators, count_undetected=True, cls_agnostic=False):
     """
@@ -279,6 +289,7 @@ def create_agreement_matrix(compared_annotation_lists, num_annotators, count_und
         agreement_matrix.append(object_categories)
     return agreement_matrix
 
+
 def compute_percent_agreement(agreement_matrix, num_annotators):
     """
     Compute the unweighted percent agreement across annotators.
@@ -290,10 +301,12 @@ def compute_percent_agreement(agreement_matrix, num_annotators):
     for annotation_set in agreement_matrix:
         # Count the maximum number of matching categories and divide by the number of annotators
         if annotation_set:
-            all_object_categories.append(annotation_set.count(max(annotation_set, key=annotation_set.count))/num_annotators)
+            all_object_categories.append(
+                annotation_set.count(max(annotation_set, key=annotation_set.count)) / num_annotators)
 
     percent_agreement = np.mean(all_object_categories)
     return percent_agreement
+
 
 def compute_krippendorff(annotations, num_annotators, categories, count_undetected=True):
     """
@@ -312,8 +325,8 @@ def compute_krippendorff(annotations, num_annotators, categories, count_undetect
     for obj in all_objects:
         if count_undetected:
             for i in range(3):
-                if obj["a_" + str(i+1)] is not None:
-                    categories_given[i].append(obj["a_" + str(i+1)]["category_id"])
+                if obj["a_" + str(i + 1)] is not None:
+                    categories_given[i].append(obj["a_" + str(i + 1)]["category_id"])
                 else:
                     categories_given[i].append(0)
         else:
@@ -324,10 +337,12 @@ def compute_krippendorff(annotations, num_annotators, categories, count_undetect
         k_alpha = 1
     else:
         if count_undetected:
-            k_alpha = krippendorff.alpha(categories_given, value_domain=categories.insert(0, 0), level_of_measurement="nominal")
+            k_alpha = krippendorff.alpha(categories_given, value_domain=categories.insert(0, 0),
+                                         level_of_measurement="nominal")
         else:
             k_alpha = krippendorff.alpha(categories_given, value_domain=categories, level_of_measurement="nominal")
     return categories_given, k_alpha
+
 
 def compute_fleiss(annotations, num_annotators, count_undetected=True, method='uniform'):
     """
@@ -360,7 +375,8 @@ def compute_fleiss(annotations, num_annotators, count_undetected=True, method='u
         f_kappa = irr.fleiss_kappa(irr.aggregate_raters(np.array(categories_given).transpose())[0], method=method)
     return categories_given, f_kappa
 
-def main():
+
+def compute_some_basic_stats():
     # Compute seed stats across the 5 part dataset
 
     dataset_path = "../datasets/dataset1/coco/post_quality_check"
@@ -379,7 +395,7 @@ def main():
 
     for part, stat in seed_stats.items():
         path_to_labels = (os.path.join(dataset_path,
-                          (part + file_name)))
+                                       (part + file_name)))
         with open(path_to_labels, 'r') as file:
             data = json.load(file)
         seed_stats[part]["total_images"] = len(data["images"])
@@ -414,6 +430,10 @@ def main():
     display(pd.DataFrame(seed_stats))
     # pd.DataFrame(seed_stats).to_csv("../dataset_stats/check2_seed_stats.csv")
 
+
+def main():
+    compute_some_basic_stats()
+
     # ----------------------------------------------------------------------------
 
     # Extract all image names and annotations needed for agreement analysis
@@ -441,14 +461,10 @@ def main():
         print("Check 1 =/= Check 2")
 
     # Faulty analysis images in pre quality checked dataset (missing annotations, rejected images, etc.)
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "226.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "231.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "261.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "271.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "311.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "316.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "406.jpg"].index[0])
-    agreement_analysis_image_names.pop(agreement_analysis_image_names[agreement_analysis_image_names == "481.jpg"].index[0])
+    rejected_imgs = ["226.jpg", "231.jpg", "261.jpg", "271.jpg", "311.jpg", "316.jpg", "406.jpg", "481.jpg"]
+    for rejected_img in rejected_imgs:
+        agreement_analysis_image_names.pop(
+            agreement_analysis_image_names[agreement_analysis_image_names == rejected_img].index[0])
 
     # Merge original and check datasets
     all_datasets = [part, check_1, check_2]
@@ -461,7 +477,6 @@ def main():
         # Annotations given by each annotator on the same image
         annotations_per_image = []
         for idx, dataset in enumerate(all_datasets):
-
             # Get the image_id for each file_name in the validation image names
             image_id = next(id["id"] for id in dataset["images"] if id["file_name"] == file_name)
             a = extract_annotations(dataset["annotations"], image_id)
@@ -487,16 +502,17 @@ def main():
         for v in agreement_analysis_image_names:
             print(v)
             ann_to_polygons = annotations_to_polygons([agreement_analysis_annotations[v][0],
-                                                      agreement_analysis_annotations[v][1],
-                                                      agreement_analysis_annotations[v][2]])
+                                                       agreement_analysis_annotations[v][1],
+                                                       agreement_analysis_annotations[v][2]])
             validation = compare_annotations_3(ann_to_polygons[0],
-                                      ann_to_polygons[1],
-                                      ann_to_polygons[2],
-                                      iou_thresh, v, False)
+                                               ann_to_polygons[1],
+                                               ann_to_polygons[2],
+                                               iou_thresh, v, False)
 
             for i in range(3):
                 all_seed_validations[i] += validation[i]
-            stats = {"same_label": len(validation[0]), "different_label": len(validation[1]), "not_labeled": len(validation[2])}
+            stats = {"same_label": len(validation[0]), "different_label": len(validation[1]),
+                     "not_labeled": len(validation[2])}
             kd = compute_krippendorff(validation, 3, [1, 2, 3], count_undetected=True)
             stats["krippendorff_with_undetected"] = kd[1]
             kd = compute_krippendorff(validation, 3, [1, 2, 3], count_undetected=False)
@@ -505,7 +521,8 @@ def main():
             stats["uniform_with_undetected"] = un[1]
             un = compute_fleiss(validation, 3, count_undetected=False)
             stats["uniform_without_undetected"] = un[1]
-            p = compute_percent_agreement(create_agreement_matrix(validation, 3, count_undetected=True, cls_agnostic=True), 3)
+            p = compute_percent_agreement(
+                create_agreement_matrix(validation, 3, count_undetected=True, cls_agnostic=True), 3)
             stats["percentage_agreement_with_undetected"] = p
             p = compute_percent_agreement(create_agreement_matrix(validation, 3, count_undetected=False), 3)
             stats["percentage_agreement_without_undetected"] = p
@@ -521,7 +538,8 @@ def main():
             compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=False)[1],
             compute_fleiss(all_seed_validations, 3, count_undetected=True)[1],
             compute_fleiss(all_seed_validations, 3, count_undetected=False)[1],
-            compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True), 3),
+            compute_percent_agreement(
+                create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True), 3),
             compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=False), 3)
         ]
         print(agreement.loc[:, ["img_mean", "seed_mean"]])
@@ -548,7 +566,8 @@ def main():
         for c in all_combinations:
             pair_agreement[tuple(set(c))] = pair_agreement.get(tuple(set(c)), 0) + 1
     pair_agreement["Total"] = sum(pair_agreement.values())
-    pair_agreement = pd.DataFrame(pair_agreement.values(), index=list(pair_agreement.keys()), columns=["Number of annotations"])
+    pair_agreement = pd.DataFrame(pair_agreement.values(), index=list(pair_agreement.keys()),
+                                  columns=["Number of annotations"])
     print(pair_agreement.sort_values("Number of annotations", ascending=False))
     # pair_agreement.to_csv(os.path.join("../validation_stats", "pair_agreement_" + str(iou_thresh) + ".csv"), index=True)
 
@@ -559,6 +578,7 @@ def main():
     unique = pd.DataFrame(unique.values(), index=list(unique.keys()), columns=["Number of annotations"])
     print(unique.sort_values("Number of annotations", ascending=False))
     # unique.to_csv(os.path.join("../validation_stats", "triplet_agreement_" + str(iou_thresh) + ".csv"), index=True)
+
 
 if __name__ == "__main__":
     main()
