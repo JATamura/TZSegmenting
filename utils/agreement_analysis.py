@@ -8,7 +8,7 @@ import krippendorff
 import copy
 import pandas as pd
 from statsmodels.stats import inter_rater as irr
-from configure_data import extract_annotations
+from prepare_data import extract_annotations
 import itertools
 
 

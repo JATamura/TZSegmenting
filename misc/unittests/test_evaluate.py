@@ -2,7 +2,7 @@ import os.path
 import unittest
 from shapely.geometry import Polygon as ShapelyPolygon
 
-from utils.evaluate import evaluate_segmentations
+from misc.evaluate import evaluate_segmentations
 from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as MplPolygon
 from matplotlib.collections import PatchCollection
