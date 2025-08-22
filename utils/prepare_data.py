@@ -72,6 +72,7 @@ def combine_preqc_datasets(path_to_annotations, output_path):
     :param      path_to_annotations: (list string) File paths to the 5 part pre-quality checked COCO datasets.
     :param      output_path: (string) Output path.
     """
+
     all_annotations = []
     for a in path_to_annotations:
         with open(a, 'r') as file:
@@ -115,6 +116,7 @@ def split_postqc_dataset(annotations_path, output_path):
     :param      annotations_path: (string) Path to the post-quality checked COCO dataset.
     :param      output_path: (string) Path to where the split up dataset will be stored as json files.
     """
+
     with open(annotations_path, 'r') as file:
         data = json.load(file)
 
@@ -202,6 +204,7 @@ def extract_annotations(all_annotations, image_id):
     :param      image_id: (int) Image ID.
     :return     image_annotations: (list dict) All annotations extracted from the specified image.
     """
+
     image_annotations = []
     for annotation in all_annotations:
         if annotation["image_id"] == image_id:
@@ -214,6 +217,7 @@ def avg_seg_size(annotations):
     :param     annotations: (dict list) List of annotations in COCO format (usually from a single image).
     :return    avg_area: (float) Average segmentation/mask size of annotations.
     """
+
     areas = 0
     for a in annotations:
         a_seg = np.array(a["segmentation"][0])
@@ -228,6 +232,7 @@ def avg_bbox_size(annotations):
     :param     annotations: (dict list) List of annotations in COCO format (usually from a single image).
     :return    avg_bbox: (float) Average bbox size of annotations.
     """
+
     areas = 0
     for a in annotations:
         areas += a["bbox"][2] * a["bbox"][3]
@@ -301,6 +306,7 @@ def stratify(stats, test_ratio=0.2, val_ratio=0.2):
     :return     test: (pandas.DataFrame) Statistics of the images stratified into the testing dataset.
     :return     val: (pandas.DataFrame) Statistics of the images stratified into the validation dataset.
     """
+
     stats["stratify"] = (
         # stats["total_bin"].astype(str) + "_" +
         stats["viable_bin"].astype(str) + "_" +
