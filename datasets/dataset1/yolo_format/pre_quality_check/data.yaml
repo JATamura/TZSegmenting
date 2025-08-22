@@ -1,8 +1,0 @@
-names:
-  0: Viable
-  1: Non-Viable
-  2: Empty
-path: ../datasets/dataset1/yolo_format/pre_quality_check
-test: images/test
-train: images/train
-val: images/val
