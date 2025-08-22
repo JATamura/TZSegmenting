@@ -14,6 +14,15 @@ from detectron2.structures import Instances
 from detectron2.utils.visualizer import Visualizer, ColorMode
 
 def mask_nms(masks, scores, nms_threshold=0.5):
+    """
+    Runs class agnostic NMS on masks/segmentations instead of the bounding boxes.
+    :param      masks: (list float) List of coordinates that make up the mask output from the model.
+    :param      scores: (list float) List of corresponding confidence scores given to each mask.
+    :param      nms_threshold: (float) Threshold to apply mask-based class agnostic NMS.
+    :return:    masks_kept (list float) -- List of masks kept after applying NMS.
+    """
+
+    # Convert all masks to Polygons
     polygons = []
     for mask in masks:
         contour = sv.mask_to_polygons(mask)
@@ -21,33 +30,28 @@ def mask_nms(masks, scores, nms_threshold=0.5):
             polygons.append(Polygon(contour[0]))
         else:
             polygons.append(Polygon([]))
+
     order = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
-    keep = []
+    masks_kept = []
     while order:
         i = order.pop(0)
-        keep.append(i)
+        masks_kept.append(i)
         for j in order:
-            # Calculate the IoU between the two polygons
+            # Calculate the IoU between each polygon
             intersection = polygons[i].intersection(polygons[j]).area
             union = polygons[i].union(polygons[j]).area
             iou = intersection / union
 
-            # intersection = masks[i] * masks[j]
-            # union = masks[i] + masks[j]
-            # iou = intersection.sum() / union.sum()
-
             # Remove masks with IoU greater than the threshold
             if iou > nms_threshold:
                 order.remove(j)
-    return keep
+    return masks_kept
 
 def apply_nms(prediction, cls_agnostic_nms=0.5, mask=False):
     if mask:
-        # print("Applying mask NMS")
         nms_indices = mask_nms(prediction["instances"].pred_masks.numpy(),
                                prediction["instances"]._fields["scores"], cls_agnostic_nms)
     else:
-        # print("Applying box NMS")
         nms_indices = nms(prediction["instances"].pred_boxes.tensor,
                           prediction["instances"].scores, cls_agnostic_nms)
 
@@ -59,29 +63,38 @@ def apply_nms(prediction, cls_agnostic_nms=0.5, mask=False):
 
     return pred
 
-def display_predictions(cfg, pred, im, img_name="", mask=True):
+def display_predictions(pred, img, img_name="", mask=True, alpha=0.5, output_dir=None):
     fig, ax = plt.subplots()
-    v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]),
+    v = Visualizer(img[:, :, ::-1], {"thing_classes": ['Viable', 'Non-Viable', 'Empty'],
+                          "thing_colors": [(255, 0, 0), (255, 255, 0), (0, 0, 0)]},
                    scale=1.2, instance_mode=ColorMode.SEGMENTATION, font_size_scale=1.5)
+    colors = []
+    for label in pred["instances"].pred_classes:
+        if label == 1:
+            colors.append([0,1,0])
+        elif label == 2:
+            colors.append([1,0,0])
+        elif label == 3:
+            colors.append([0,0,0])
+        else:
+            colors.append([0,0,1])
     if mask:
-        colors = []
-        for label in pred["instances"].pred_classes:
-            if label == 1:
-                colors.append([0,1,0])
-            elif label == 2:
-                colors.append([1,0,0])
-            elif label == 3:
-                colors.append([0,0,0])
-            else:
-                print(label)
-                colors.append([1,1,1])
-        out = v.overlay_instances(masks = pred["instances"].pred_masks.to("cpu"),
-                                  assigned_colors = colors)
+        out = v.overlay_instances(
+            boxes = pred["instances"].pred_boxes.to("cpu"),
+            masks = pred["instances"].pred_masks.to("cpu"),
+            assigned_colors = colors,
+            alpha = alpha
+        )
     else:
-        out = v.draw_instance_predictions(pred["instances"].to("cpu"), jittering=False)
+        out = v.overlay_instances(
+            boxes=pred["instances"].pred_boxes.to("cpu"),
+            assigned_colors=colors,
+            alpha=alpha
+        )
     ax.imshow(cv2.cvtColor(out.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
     plt.axis('off')
-    fig.savefig("outputs/seg_" + img_name, dpi=800)
+    if output_dir:
+        fig.savefig(os.path.join(output_dir, img_name), dpi=800)
     plt.show()
 
 if __name__ == "__main__":
@@ -90,14 +103,17 @@ if __name__ == "__main__":
     test = "../../datasets/dataset1/coco/postqc_model_data/test.json"
     val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
 
-    model_path = "output_02_05_no_freeze"
+    model_path = "output_07_29_cascade_4"
     model_architecture = importlib.import_module("model_weights." + model_path + ".model_architecture")
 
-    param_dict = {"cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST": 0.8,
-                  "cfg.MODEL.RPN.NMS_THRESH": 0.8,
-                  "cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST": 0.05,
-                  "cfg.TEST.DETECTIONS_PER_IMAGE": 1000,
-                  "cfg.INPUT.MIN_SIZE_TEST": 800}
+    param_dict = {
+        "cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST": 0.5,
+        "cfg.MODEL.RPN.NMS_THRESH": 0.5,
+        "cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST": 0.05,
+        "cfg.TEST.DETECTIONS_PER_IMAGE": 800,
+        "cfg.INPUT.MIN_SIZE_TEST": 1200,
+        "cfg.INPUT.MAX_SIZE_TEST": 1200,
+    }
     cfg = model_architecture.build_config(dataset_path, train, test, val, param_dict)
 
     ## load trained weights
@@ -110,11 +126,19 @@ if __name__ == "__main__":
     #                  cls_agnostic_nms=0.5, mask=False)
     # display_predictions(cfg, pred, im=cv2.imread("../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg"),
     #                     img_name="box")
-    img = cv2.imread("../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg")
+    img = cv2.imread("../../datasets/dataset1/all_images/381.jpg")
     prediction = predictor(img)
-    pred = apply_nms(prediction, cls_agnostic_nms=0.5, mask=True)
-    display_predictions(cfg, pred, im=cv2.imread("../../datasets/dataset1/BRIN_test_2/00 VANDOPSIS LISSOCHILOIDES F-2023 TZ 30aprl25 n.jpg"),
-                        img_name="box_mask")
+    # print(prediction)
+    display_predictions(prediction, img=img,
+                        img_name="053")
+    pred = apply_nms(prediction, cls_agnostic_nms=0.7, mask=False)
+    # print(pred)
+    display_predictions(pred, img=img,
+                        img_name="053_box")
+    pred = apply_nms(pred, cls_agnostic_nms=0.7, mask=True)
+    # print(pred)
+    display_predictions(pred, img=img,
+                        img_name="053_box_mask")
 
 
     # for img in os.listdir("../../datasets/dataset1/BRIN_test_2"):
