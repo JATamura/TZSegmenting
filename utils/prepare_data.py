@@ -16,17 +16,17 @@ from pycocotools import mask as cocomask
 
 # Source: https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch/#create-custom-coco-dataset
 def rle_to_coco(annotation: dict) -> list[dict]:
-    """Transform the rle coco annotation (a single one) into coco style.
+    """Transform the rle coco_format annotation (a single one) into coco_format style.
     In this case, one mask can contain several polygons, later leading to several `Annotation` objects.
     In case of not having a valid polygon (the mask is a single pixel) it will be an empty list.
     Parameters
     ----------
     annotation : dict
-        rle coco style annotation
+        rle coco_format style annotation
     Returns
     -------
     list[dict]
-        list of coco style annotations (in dict format)
+        list of coco_format style annotations (in dict format)
     """
 
     annotation["segmentation"] = cocomask.frPyObjects(
@@ -66,12 +66,11 @@ def rle_to_coco(annotation: dict) -> list[dict]:
 
     return annotations
 
-def combine_datasets(path_to_annotations, output_path):
+def combine_preqc_datasets(path_to_annotations, output_path):
     """
-    Used to combine the five part dataset into one.
-    :param      path_to_annotations: (list string) File paths to COCO annotations
+    Used to combine the five part pre-quality checked dataset into one.
+    :param      path_to_annotations: (list string) File paths to the 5 part pre-quality checked COCO datasets.
     :param      output_path: (string) Output path.
-    :return:
     """
     all_annotations = []
     for a in path_to_annotations:
@@ -109,6 +108,92 @@ def combine_datasets(path_to_annotations, output_path):
 
     with open(output_path, "w") as outfile:
         json.dump(combined, outfile)
+
+def split_postqc_dataset(annotations_path, output_path):
+    """
+    Used to split the post-quality checked dataset with the duplicate annotations for agreement analysis into their respective files.
+    :param      annotations_path: (string) Path to the post-quality checked COCO dataset.
+    :param      output_path: (string) Path to where the split up dataset will be stored as json files.
+    """
+    with open(annotations_path, 'r') as file:
+        data = json.load(file)
+
+    base_imgs = []
+    dupe_1_imgs = []
+    dupe_2_imgs = []
+
+    for img in data["images"]:
+        if "_1" in img["file_name"]:
+            img["file_name"] = img["file_name"].replace("_1", "")
+            dupe_1_imgs.append(img)
+        elif "_2" in img["file_name"]:
+            img["file_name"] = img["file_name"].replace("_2", "")
+            dupe_2_imgs.append(img)
+        else:
+            base_imgs.append(img)
+
+    base_anns = []
+    dupe_1_anns = []
+    dupe_2_anns = []
+    for ann in data["annotations"]:
+        if type(ann["segmentation"]) != list:
+            ann["segmentation"] = [rle_to_coco(ann)[0]["segmentation_coords"]]
+        if ann["image_id"] in [image["id"] for image in dupe_1_imgs]:
+            dupe_1_anns.append(ann)
+        elif ann["image_id"] in [image["id"] for image in dupe_2_imgs]:
+            dupe_2_anns.append(ann)
+        else:
+            base_anns.append(ann)
+
+    default = {
+        "licenses": [{"name": "", "id": 0, "url": ""}],
+        "info": {"contributor": "", "date_created": "",
+                 "description": "", "url": "", "version": "", "year": ""},
+        "categories": [{"id": 1, "name": "Viable", "supercategory": ""},
+                       {"id": 2, "name": "Non-Viable", "supercategory": ""},
+                       {"id": 3, "name": "Empty", "supercategory": ""}],
+        "images": [],
+        "annotations": []
+    }
+
+    base_dataset = copy.deepcopy(default)
+    base_dataset["images"] = base_imgs
+    base_dataset["annotations"] = base_anns
+    for i, image in enumerate(base_dataset["images"]):
+        for annotation in base_dataset["annotations"]:
+            if annotation["image_id"] == image["id"]:
+                annotation["image_id"] = i+1
+        image["id"] = i+1
+    for i, annotation in enumerate(base_dataset["annotations"]):
+        annotation["id"] = i+1
+    with open(os.path.join(output_path, "base_dataset.json"), 'w') as file:
+        json.dump(base_dataset, file)
+
+    dupe_1_dataset = copy.deepcopy(default)
+    dupe_1_dataset["images"] = dupe_1_imgs
+    dupe_1_dataset["annotations"] = dupe_1_anns
+    for i, image in enumerate(dupe_1_dataset["images"]):
+        for annotation in dupe_1_dataset["annotations"]:
+            if annotation["image_id"] == image["id"]:
+                annotation["image_id"] = i+1
+        image["id"] = i+1
+    for i, annotation in enumerate(dupe_1_dataset["annotations"]):
+        annotation["id"] = i+1
+    with open(os.path.join(output_path, "duplicate_1.json"), 'w') as file:
+        json.dump(dupe_1_dataset, file)
+
+    dupe_2_dataset = copy.deepcopy(default)
+    dupe_2_dataset["images"] = dupe_2_imgs
+    dupe_2_dataset["annotations"] = dupe_2_anns
+    for i, image in enumerate(dupe_2_dataset["images"]):
+        for annotation in dupe_2_dataset["annotations"]:
+            if annotation["image_id"] == image["id"]:
+                annotation["image_id"] = i+1
+        image["id"] = i+1
+    for i, annotation in enumerate(dupe_2_dataset["annotations"]):
+        annotation["id"] = i+1
+    with open(os.path.join(output_path, "duplicate_2.json"), 'w') as file:
+        json.dump(dupe_2_dataset, file)
 
 def extract_annotations(all_annotations, image_id):
     """
@@ -304,54 +389,59 @@ def convert_iscrowd(dataset_path):
         json.dump(data, file)
 
 def main():
-    # Merge five part datasets into one
+    # Reorganise directories and datasets
 
-    print("Combining datasets")
+    print("Combining pre-quality checked datasets")
 
-    datasets_to_merge = ["../datasets/dataset1/coco/pre_quality_check/part1_preqc.json",
-                         "../datasets/dataset1/coco/pre_quality_check/part2_preqc.json",
-                         "../datasets/dataset1/coco/pre_quality_check/part3_preqc.json",
-                         "../datasets/dataset1/coco/pre_quality_check/part4_preqc.json",
-                         "../datasets/dataset1/coco/pre_quality_check/part5_preqc.json"]
-    output_path = "../datasets/dataset1/coco/pre_quality_check/all_preqc.json"
-    combine_datasets(datasets_to_merge, output_path)
-    convert_iscrowd(output_path)
-
-    datasets_to_merge = ["../datasets/dataset1/coco/post_quality_check/part1_postqc.json",
-                         "../datasets/dataset1/coco/post_quality_check/part2_postqc.json",
-                         "../datasets/dataset1/coco/post_quality_check/part3_postqc.json",
-                         "../datasets/dataset1/coco/post_quality_check/part4_postqc.json",
-                         "../datasets/dataset1/coco/post_quality_check/part5_postqc.json"]
-    output_path = "../datasets/dataset1/coco/post_quality_check/all_postqc.json"
-    combine_datasets(datasets_to_merge, output_path)
+    # Merge pre-quality checked base dataset
+    datasets_to_merge = [
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_1.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_2.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_3.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_4.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_5.json"
+    ]
+    output_path = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
+    combine_preqc_datasets(datasets_to_merge, output_path)
     convert_iscrowd(output_path)
 
     # ...and corresponding checks (duplicate datasets used for agreement analysis)
-    datasets_to_merge = ["../datasets/dataset1/coco/check_1/part1_check1.json",
-                         "../datasets/dataset1/coco/check_1/part2_check1.json",
-                         "../datasets/dataset1/coco/check_1/part3_check1.json",
-                         "../datasets/dataset1/coco/check_1/part4_check1.json",
-                         "../datasets/dataset1/coco/check_1/part5_check1.json"]
-    output_path = "../datasets/dataset1/coco/check_1/all_check1.json"
-    combine_datasets(datasets_to_merge, output_path)
+    datasets_to_merge = [
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_1.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_2.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_3.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_4.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_5.json"
+    ]
+    output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
+    combine_preqc_datasets(datasets_to_merge, output_path)
     convert_iscrowd(output_path)
 
-    datasets_to_merge = ["../datasets/dataset1/coco/check_2/part1_check2.json",
-                         "../datasets/dataset1/coco/check_2/part2_check2.json",
-                         "../datasets/dataset1/coco/check_2/part3_check2.json",
-                         "../datasets/dataset1/coco/check_2/part4_check2.json",
-                         "../datasets/dataset1/coco/check_2/part5_check2.json"]
-    output_path = "../datasets/dataset1/coco/check_2/all_check2.json"
-    combine_datasets(datasets_to_merge, output_path)
+    datasets_to_merge = [
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_1.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_2.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_3.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_4.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_5.json"
+    ]
+    output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
+    combine_preqc_datasets(datasets_to_merge, output_path)
     convert_iscrowd(output_path)
+
+    print("Splitting post-quality checked datasets")
+
+    annotations_path = "../datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json"
+    output_path = "../datasets/dataset1/coco_format/post_quality_check"
+    convert_iscrowd(annotations_path)
+    split_postqc_dataset(annotations_path, output_path)
 
     # ----------------------------------------------------------------------------
 
     # Calculate seed stats, stratify accordingly
 
     dataset_path = [
-        "../datasets/dataset1/coco/pre_quality_check/all_preqc.json",
-        "../datasets/dataset1/coco/post_quality_check/all_postqc.json"
+        "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json",
+        "../datasets/dataset1/coco_format/post_quality_check/base_dataset.json"
     ]
 
     # Use the post quality checked dataset for seed stats and stratification
@@ -372,7 +462,6 @@ def main():
         if img["file_name"] == "481.jpg":
             imgs_with_issues.append((img["file_name"], len(annotations), img))
 
-
     for file_name, object_count, img in imgs_with_issues:
         print(file_name + " was removed. It had " + str(object_count) + " objects.")
         post_qc_dataset["images"].remove(img)
@@ -387,22 +476,28 @@ def main():
 
     print("Finished stratification")
 
-    # -----------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------
 
     # Split the pre and qpost quality checked datasets using the stratified output, create train, test, and val datasets for COCO and YOLO
 
     coco_dir = [
-        "../datasets/dataset1/coco/preqc_model_data",
-        "../datasets/dataset1/coco/postqc_model_data"
-    ]
-    yolo_dir = [
-        "../datasets/dataset1/yolo/pre_qc",
-        "../datasets/dataset1/yolo/post_qc"
+        "../datasets/dataset1/coco_format/pre_quality_check/model_data",
+        "../datasets/dataset1/coco_format/post_quality_check/model_data"
     ]
 
-    for i in range(2):
+    yolo_dir = [
+        "../datasets/dataset1/yolo_format/pre_quality_check",
+        "../datasets/dataset1/yolo_format/post_quality_check"
+    ]
+    if not os.path.exists("../datasets/dataset1/yolo_format"):
+        os.makedirs("../datasets/dataset1/yolo_format")
+    for directory in yolo_dir:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+    for i in range(len(coco_dir)):
         if not os.path.exists(coco_dir[i]):
-            os.makedirs(coco_dir[i], exist_ok=True)
+            os.makedirs(coco_dir[i])
         print("Splitting dataset: " + coco_dir[i])
         # Splitting the data
         train_set, test_set, val_set = train_test_split_coco(
@@ -428,7 +523,7 @@ def main():
         # Create directories for YOLO datasets
         for dir in os.listdir(os.path.join(yolo_dir[i], "labels")):
             if not os.path.exists(os.path.join(yolo_dir[i], "images", dir)):
-                os.makedirs(os.path.join(yolo_dir[i], "images", dir), exist_ok=True)
+                os.makedirs(os.path.join(yolo_dir[i], "images", dir))
             for txt in os.listdir(os.path.join(yolo_dir[i], "labels", dir)):
                 img = txt.split(".txt")[0] + ".jpg"
                 shutil.copy(os.path.join("../datasets/dataset1/all_images", img),
