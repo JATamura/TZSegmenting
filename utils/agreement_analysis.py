@@ -438,10 +438,16 @@ def main():
 
     # Extract all image names and annotations needed for agreement analysis
 
-    # Paths to dataset and corresponding checks
-    path_to_part = "../datasets/dataset1/coco/pre_quality_check/all_preqc.json"
-    path_to_check_1 = "../datasets/dataset1/coco/check_1/all_check1.json"
-    path_to_check_2 = "../datasets/dataset1/coco/check_2/all_check2.json"
+    # # Paths to pre-quality checked datasets and corresponding duplicates
+    # path_to_part = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
+    # path_to_check_1 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
+    # path_to_check_2 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
+
+    # # Paths to post-quality checked datasets and corresponding duplicates
+    path_to_part = "../datasets/dataset1/coco_format/post_quality_check/base_dataset.json"
+    path_to_check_1 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_1.json"
+    path_to_check_2 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_2.json"
+
 
     with open(path_to_part, 'r') as file:
         part = json.load(file)
@@ -453,6 +459,7 @@ def main():
         check_2 = json.load(file)
 
     # Get validation image names from datasets
+    # This script assumes all images are in separate json files and the corresponding images have identical image names
     agreement_analysis_image_names = []
     if check_1["images"] == check_2["images"]:
         print("All validation images have the same name")
@@ -461,10 +468,10 @@ def main():
         print("Check 1 =/= Check 2")
 
     # Faulty analysis images in pre quality checked dataset (missing annotations, rejected images, etc.)
-    rejected_imgs = ["226.jpg", "231.jpg", "261.jpg", "271.jpg", "311.jpg", "316.jpg", "406.jpg", "481.jpg"]
-    for rejected_img in rejected_imgs:
-        agreement_analysis_image_names.pop(
-            agreement_analysis_image_names[agreement_analysis_image_names == rejected_img].index[0])
+    # rejected_imgs = ["226.jpg", "231.jpg", "261.jpg", "271.jpg", "311.jpg", "316.jpg", "406.jpg", "481.jpg"]
+    # for rejected_img in rejected_imgs:
+    #     agreement_analysis_image_names.pop(
+    #         agreement_analysis_image_names[agreement_analysis_image_names == rejected_img].index[0])
 
     # Merge original and check datasets
     all_datasets = [part, check_1, check_2]
@@ -481,8 +488,16 @@ def main():
             image_id = next(id["id"] for id in dataset["images"] if id["file_name"] == file_name)
             a = extract_annotations(dataset["annotations"], image_id)
             annotations_per_image.append(a)
-            annotation_counts[idx] += len(a)
-        agreement_analysis_annotations[file_name] = annotations_per_image
+        if [] in annotations_per_image:
+            print(file_name + " has no annotations at index " + str(
+                [i for i, annotations in enumerate(annotations_per_image) if
+                 annotations == []]) + " and was removed from analysis")
+        # Append to the dictionary the file name and corresponding number of annotations made by each annotator
+        else:
+            agreement_analysis_annotations[file_name] = annotations_per_image
+            for i, annotations in enumerate(annotations_per_image):
+                annotation_counts[i] += len(annotations)
+
     print("Total number of annotations across all images used for agreement analysis: " + str(sum(annotation_counts)))
     print("Annotation in original: " + str(annotation_counts[0]))
     print("Annotation in check 1: " + str(annotation_counts[1]))
@@ -492,22 +507,28 @@ def main():
 
     # Compute agreement analysis metrics for different IoU (intersection over union) thresholds
 
+    output_path = "../agreement_analysis_stats"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     ious = [0.5]
-    all_seed_validations = []
     for i in ious:
         iou_thresh = i
         print(iou_thresh)
         agreement = {}
         all_seed_validations = [[], [], []]
-        for v in agreement_analysis_image_names:
-            print(v)
-            ann_to_polygons = annotations_to_polygons([agreement_analysis_annotations[v][0],
-                                                       agreement_analysis_annotations[v][1],
-                                                       agreement_analysis_annotations[v][2]])
+        for image_name in agreement_analysis_image_names:
+            if agreement_analysis_annotations.get(image_name) is None:
+                print(image_name)
+                continue
+            print(image_name)
+            ann_to_polygons = annotations_to_polygons([agreement_analysis_annotations[image_name][0],
+                                                       agreement_analysis_annotations[image_name][1],
+                                                       agreement_analysis_annotations[image_name][2]])
             validation = compare_annotations_3(ann_to_polygons[0],
                                                ann_to_polygons[1],
                                                ann_to_polygons[2],
-                                               iou_thresh, v, False)
+                                               iou_thresh, image_name, False)
 
             for i in range(3):
                 all_seed_validations[i] += validation[i]
@@ -526,11 +547,11 @@ def main():
             stats["percentage_agreement_with_undetected"] = p
             p = compute_percent_agreement(create_agreement_matrix(validation, 3, count_undetected=False), 3)
             stats["percentage_agreement_without_undetected"] = p
-            agreement[v] = stats
+            agreement[image_name] = stats
 
         agreement = pd.DataFrame(agreement)
-        agreement['img_mean'] = agreement.mean(axis=1)
-        agreement['seed_mean'] = [
+        agreement['per_img_mean'] = agreement.mean(axis=1)
+        agreement['dataset_total'] = [
             len(all_seed_validations[0]),
             len(all_seed_validations[1]),
             len(all_seed_validations[2]),
@@ -542,42 +563,42 @@ def main():
                 create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True), 3),
             compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=False), 3)
         ]
-        print(agreement.loc[:, ["img_mean", "seed_mean"]])
-        # agreement.to_csv(os.path.join("../validation_stats", "new_metrics_" + str(iou_thresh) + ".csv"), index=True)
+        print(agreement.loc[:, ["per_img_mean", "dataset_total"]])
+        agreement.to_csv(os.path.join(output_path, "new_metrics_" + str(iou_thresh) + ".csv"), index=True)
 
-    all_a = create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=False)
+        all_a = create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=False)
 
-    all_a_converted = []
-    for set_of_three in all_a:
-        set_of_three_converted = []
-        for a in set_of_three:
-            switch = {
-                0: 'Undetected',
-                1: 'Viable',
-                2: 'Non-Viable',
-                3: 'Empty'
-            }
-            set_of_three_converted.append(switch.get(a))
-        all_a_converted.append(set_of_three_converted)
+        all_a_converted = []
+        for set_of_three in all_a:
+            set_of_three_converted = []
+            for a in set_of_three:
+                switch = {
+                    0: 'Undetected',
+                    1: 'Viable',
+                    2: 'Non-Viable',
+                    3: 'Empty'
+                }
+                set_of_three_converted.append(switch.get(a))
+            all_a_converted.append(set_of_three_converted)
 
-    pair_agreement = {}
-    for set_of_three in all_a_converted:
-        all_combinations = list(itertools.combinations(set_of_three, 2))
-        for c in all_combinations:
-            pair_agreement[tuple(set(c))] = pair_agreement.get(tuple(set(c)), 0) + 1
-    pair_agreement["Total"] = sum(pair_agreement.values())
-    pair_agreement = pd.DataFrame(pair_agreement.values(), index=list(pair_agreement.keys()),
-                                  columns=["Number of annotations"])
-    print(pair_agreement.sort_values("Number of annotations", ascending=False))
-    # pair_agreement.to_csv(os.path.join("../validation_stats", "pair_agreement_" + str(iou_thresh) + ".csv"), index=True)
+        pair_agreement = {}
+        for set_of_three in all_a_converted:
+            all_combinations = list(itertools.combinations(set_of_three, 2))
+            for c in all_combinations:
+                pair_agreement[tuple(set(c))] = pair_agreement.get(tuple(set(c)), 0) + 1
+        pair_agreement["Total"] = sum(pair_agreement.values())
+        pair_agreement = pd.DataFrame(pair_agreement.values(), index=list(pair_agreement.keys()),
+                                      columns=["Number of annotations"])
+        print(pair_agreement.sort_values("Number of annotations", ascending=False))
+        pair_agreement.to_csv(os.path.join(output_path, "pair_agreement_" + str(iou_thresh) + ".csv"), index=True)
 
-    unique = {}
-    for set_of_three in all_a_converted:
-        unique[tuple(sorted(set_of_three))] = unique.get(tuple(sorted(set_of_three)), 0) + 1
-    unique["Total"] = sum(unique.values())
-    unique = pd.DataFrame(unique.values(), index=list(unique.keys()), columns=["Number of annotations"])
-    print(unique.sort_values("Number of annotations", ascending=False))
-    # unique.to_csv(os.path.join("../validation_stats", "triplet_agreement_" + str(iou_thresh) + ".csv"), index=True)
+        unique = {}
+        for set_of_three in all_a_converted:
+            unique[tuple(sorted(set_of_three))] = unique.get(tuple(sorted(set_of_three)), 0) + 1
+        unique["Total"] = sum(unique.values())
+        unique = pd.DataFrame(unique.values(), index=list(unique.keys()), columns=["Number of annotations"])
+        print(unique.sort_values("Number of annotations", ascending=False))
+        unique.to_csv(os.path.join(output_path, "triplet_agreement_" + str(iou_thresh) + ".csv"), index=True)
 
 
 if __name__ == "__main__":
