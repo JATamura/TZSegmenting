@@ -210,21 +210,6 @@ def extract_annotations(all_annotations, image_id):
             image_annotations.append(annotation)
     return image_annotations
 
-def avg_seg_size(annotations):
-    """
-    Calculates the average segmention/mask size. Used to stratify the dataset.
-    :param     annotations: (dict list) List of annotations in COCO format (usually from a single image).
-    :return    avg_area: (float) Average segmentation/mask size of annotations.
-    """
-
-    areas = 0
-    for a in annotations:
-        a_seg = np.array(a["segmentation"][0])
-        polygon = Polygon(a_seg.reshape(int(len(a_seg) / 2), 2))
-        areas += polygon.area
-    avg_seg = areas / len(annotations)
-    return avg_seg
-
 def avg_bbox_size(annotations):
     """
     Calculates the average bbox size. Primarily used to gauge Mask R-CNN anchor sizes.
@@ -232,11 +217,32 @@ def avg_bbox_size(annotations):
     :return    avg_bbox: (float) Average bbox size of annotations.
     """
 
-    areas = 0
-    for a in annotations:
-        areas += a["bbox"][2] * a["bbox"][3]
-    avg_bbox = areas / len(annotations)
+    if len(annotations) > 0:
+        areas = 0
+        for a in annotations:
+            areas += a["bbox"][2] * a["bbox"][3]
+        avg_bbox = areas / len(annotations)
+    else:
+        avg_bbox = 0
     return avg_bbox
+
+def avg_seg_size(annotations):
+    """
+    Calculates the average segmention/mask size. Used to stratify the dataset.
+    :param     annotations: (dict list) List of annotations in COCO format (usually from a single image).
+    :return    avg_area: (float) Average segmentation/mask size of annotations.
+    """
+
+    if len(annotations) > 0:
+        areas = 0
+        for a in annotations:
+            a_seg = np.array(a["segmentation"][0])
+            polygon = Polygon(a_seg.reshape(int(len(a_seg) / 2), 2))
+            areas += polygon.area
+        avg_seg = areas / len(annotations)
+    else:
+        avg_seg = 0
+    return avg_seg
 
 def seed_stats(dataset, stratify=True, output_path="", file_name=""):
     """
@@ -255,15 +261,14 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
     avg_bbox_sizes = []
     for image in dataset["images"]:
         annotations = extract_annotations(dataset["annotations"], image["id"])
-        if len(annotations) > 0:
-            file_names.append(image["file_name"])
-            viable.append(len([a for a in annotations if a["category_id"] == 1]))
-            nonviable.append(len([a for a in annotations if a["category_id"] == 2]))
-            empty.append(len([a for a in annotations if a["category_id"] == 3]))
-            total_counts.append(len(annotations))
-            viability_ratios.append(len([a for a in annotations if a["category_id"] == 1]) / len(annotations))
-            avg_segm_sizes.append(avg_seg_size(annotations))
-            avg_bbox_sizes.append(avg_bbox_size(annotations))
+        file_names.append(image["file_name"])
+        viable.append(len([a for a in annotations if a["category_id"] == 1]))
+        nonviable.append(len([a for a in annotations if a["category_id"] == 2]))
+        empty.append(len([a for a in annotations if a["category_id"] == 3]))
+        total_counts.append(len(annotations))
+        viability_ratios.append(len([a for a in annotations if a["category_id"] == 1]) / len(annotations) if len(annotations) > 0 else 0)
+        avg_segm_sizes.append(avg_seg_size(annotations))
+        avg_bbox_sizes.append(avg_bbox_size(annotations))
 
     stats = pd.DataFrame(
         {
@@ -312,7 +317,7 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
     if output_path:
         if not file_name:
             file_name = "seed_stats"
-        stats.describe(include="all").to_csv(os.path.join(output_path, file_name + ".csv"))
+        stats.to_csv(os.path.join(output_path, file_name + ".csv"))
     print(stats)
 
     return stats
@@ -419,49 +424,49 @@ def convert_iscrowd(dataset_path):
 def main():
     # Reorganise directories and datasets
 
-    print("Combining pre-quality checked datasets")
-
-    # Merge pre-quality checked base dataset
-    datasets_to_merge = [
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_1.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_2.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_3.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_4.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_5.json"
-    ]
-    output_path = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
-    combine_preqc_datasets(datasets_to_merge, output_path)
-    convert_iscrowd(output_path)
-
-    # ...and corresponding checks (duplicate datasets used for agreement analysis)
-    datasets_to_merge = [
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_1.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_2.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_3.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_4.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_5.json"
-    ]
-    output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
-    combine_preqc_datasets(datasets_to_merge, output_path)
-    convert_iscrowd(output_path)
-
-    datasets_to_merge = [
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_1.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_2.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_3.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_4.json",
-        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_5.json"
-    ]
-    output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
-    combine_preqc_datasets(datasets_to_merge, output_path)
-    convert_iscrowd(output_path)
-
-    print("Splitting post-quality checked datasets")
-
-    annotations_path = "../datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json"
-    output_path = "../datasets/dataset1/coco_format/post_quality_check"
-    convert_iscrowd(annotations_path)
-    split_postqc_dataset(annotations_path, output_path)
+    # print("Combining pre-quality checked datasets")
+    #
+    # # Merge pre-quality checked base dataset
+    # datasets_to_merge = [
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_1.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_2.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_3.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_4.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_5.json"
+    # ]
+    # output_path = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
+    # combine_preqc_datasets(datasets_to_merge, output_path)
+    # convert_iscrowd(output_path)
+    #
+    # # ...and corresponding checks (duplicate datasets used for agreement analysis)
+    # datasets_to_merge = [
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_1.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_2.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_3.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_4.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_5.json"
+    # ]
+    # output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
+    # combine_preqc_datasets(datasets_to_merge, output_path)
+    # convert_iscrowd(output_path)
+    #
+    # datasets_to_merge = [
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_1.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_2.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_3.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_4.json",
+    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_5.json"
+    # ]
+    # output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
+    # combine_preqc_datasets(datasets_to_merge, output_path)
+    # convert_iscrowd(output_path)
+    #
+    # print("Splitting post-quality checked datasets")
+    #
+    # annotations_path = "../datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json"
+    # output_path = "../datasets/dataset1/coco_format/post_quality_check"
+    # convert_iscrowd(annotations_path)
+    # split_postqc_dataset(annotations_path, output_path)
 
     # ----------------------------------------------------------------------------
 
@@ -503,17 +508,17 @@ def main():
     print("val size: " + str(len(val)))
 
     print("Finished stratification")
-
+    exit()
     # ----------------------------------------------------------------------------
 
     # Split the pre and qpost quality checked datasets using the stratified output, create train, test, and val datasets for COCO and YOLO
 
-    coco_dir = [
+    coco_dirs = [
         "../datasets/dataset1/coco_format/pre_quality_check/model_data",
         "../datasets/dataset1/coco_format/post_quality_check/model_data"
     ]
 
-    yolo_dir = [
+    yolo_dirs = [
         "../datasets/dataset1/yolo_format/pre_quality_check",
         "../datasets/dataset1/yolo_format/post_quality_check"
     ]
@@ -521,10 +526,10 @@ def main():
     if not os.path.exists("../datasets/dataset1/yolo_format"):
         os.makedirs("../datasets/dataset1/yolo_format")
 
-    for i in range(len(coco_dir)):
-        if not os.path.exists(coco_dir[i]):
-            os.makedirs(coco_dir[i])
-        print("Splitting dataset: " + coco_dir[i])
+    for i in range(len(coco_dirs)):
+        if not os.path.exists(coco_dirs[i]):
+            os.makedirs(coco_dirs[i])
+        print("Splitting dataset: " + coco_dirs[i])
         # Splitting the data
         train_set, test_set, val_set = train_test_split_coco(
             dataset_path[i],
@@ -535,25 +540,25 @@ def main():
         )
 
         # Save the COCO datasets as json files
-        with open(os.path.join(coco_dir[i], "train.json"), "w") as outfile:
+        with open(os.path.join(coco_dirs[i], "train.json"), "w") as outfile:
             json.dump(train_set, outfile)
-        with open(os.path.join(coco_dir[i], "test.json"), "w") as outfile:
+        with open(os.path.join(coco_dirs[i], "test.json"), "w") as outfile:
             json.dump(test_set, outfile)
-        with open(os.path.join(coco_dir[i], "val.json"), "w") as outfile:
+        with open(os.path.join(coco_dirs[i], "val.json"), "w") as outfile:
             json.dump(val_set, outfile)
 
         # Convert the COCO datasets to YOLO
-        print("Converting " + coco_dir[i] + " to YOLO")
-        convert_coco(coco_dir[i], yolo_dir[i], use_segments=True, cls91to80=False)
+        print("Converting " + coco_dirs[i] + " to YOLO")
+        convert_coco(coco_dirs[i], yolo_dirs[i], use_segments=True, cls91to80=False)
 
         # Create directories for YOLO datasets
-        for dir in os.listdir(os.path.join(yolo_dir[i], "labels")):
-            if not os.path.exists(os.path.join(yolo_dir[i], "images", dir)):
-                os.makedirs(os.path.join(yolo_dir[i], "images", dir))
-            for txt in os.listdir(os.path.join(yolo_dir[i], "labels", dir)):
+        for dir in os.listdir(os.path.join(yolo_dirs[i], "labels")):
+            if not os.path.exists(os.path.join(yolo_dirs[i], "images", dir)):
+                os.makedirs(os.path.join(yolo_dirs[i], "images", dir))
+            for txt in os.listdir(os.path.join(yolo_dirs[i], "labels", dir)):
                 img = txt.split(".txt")[0] + ".jpg"
                 shutil.copy(os.path.join("../datasets/dataset1/all_images", img),
-                            os.path.join(yolo_dir[i], "images", dir, img))
+                            os.path.join(yolo_dirs[i], "images", dir, img))
 
         # Create yaml files and save to respective directories
         yolo_yaml = {
@@ -562,13 +567,50 @@ def main():
                 1: "Non-Viable",
                 2: "Empty"
             },
-            "path": yolo_dir[i],
+            "path": yolo_dirs[i],
             "train": "images/train",
             "val": "images/val",
             "test": "images/test",
         }
-        with open(os.path.join(yolo_dir[i], 'data.yaml'), 'w') as file:
+        with open(os.path.join(yolo_dirs[i], 'data.yaml'), 'w') as file:
             yaml.dump(yolo_yaml, file)
+
+    # ----------------------------------------------------------------------------
+
+    # Calculate seed stats for every COCO dataset
+
+    # Create stats directories
+    stats_path = "../datasets/dataset1/seed_stats"
+    quality_check = ["pre_quality_check", "post_quality_check"]
+    if not os.path.exists(stats_path):
+        os.makedirs(stats_path)
+    for qc in quality_check:
+        if not os.path.exists(os.path.join(stats_path, qc)):
+            os.makedirs(os.path.join(stats_path, qc))
+
+    coco_dir = "../datasets/dataset1/coco_format"
+    for qc in quality_check:
+        coco_qc_dir = os.path.join(coco_dir, qc)
+
+        # Calculate stats for pre- and post-quality checked base_datasets and their duplicates
+        for dir in os.listdir(coco_qc_dir):
+            if dir.endswith(".json"):
+                with open(os.path.join(coco_qc_dir, dir), 'r') as file:
+                    dataset = json.load(file)
+                seed_stats(dataset, stratify=False,
+                           output_path=os.path.join(stats_path, qc), file_name=dir.strip(".json") + "_stats")
+            else:
+
+                # Calculate stats for training, testing, and validation datasets
+                if dir == "model_data":
+                    if not os.path.exists(os.path.join(stats_path, qc, dir)):
+                        os.makedirs(os.path.join(stats_path, qc, dir))
+                    for data in os.listdir(os.path.join(coco_qc_dir, dir)):
+                        with open(os.path.join(coco_qc_dir, dir, data), 'r') as file:
+                            dataset = json.load(file)
+                        seed_stats(dataset, stratify=False,
+                                   output_path=os.path.join(stats_path, qc, dir),
+                                   file_name=data.strip(".json") + "_stats")
 
     print("Complete")
 
