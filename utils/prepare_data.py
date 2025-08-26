@@ -318,7 +318,6 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
         if not file_name:
             file_name = "seed_stats"
         stats.to_csv(os.path.join(output_path, file_name + ".csv"))
-    print(stats)
 
     return stats
 
@@ -424,49 +423,49 @@ def convert_iscrowd(dataset_path):
 def main():
     # Reorganise directories and datasets
 
-    # print("Combining pre-quality checked datasets")
-    #
-    # # Merge pre-quality checked base dataset
-    # datasets_to_merge = [
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_1.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_2.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_3.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_4.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_5.json"
-    # ]
-    # output_path = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
-    # combine_preqc_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
-    #
-    # # ...and corresponding checks (duplicate datasets used for agreement analysis)
-    # datasets_to_merge = [
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_1.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_2.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_3.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_4.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_5.json"
-    # ]
-    # output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
-    # combine_preqc_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
-    #
-    # datasets_to_merge = [
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_1.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_2.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_3.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_4.json",
-    #     "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_5.json"
-    # ]
-    # output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
-    # combine_preqc_datasets(datasets_to_merge, output_path)
-    # convert_iscrowd(output_path)
-    #
-    # print("Splitting post-quality checked datasets")
-    #
-    # annotations_path = "../datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json"
-    # output_path = "../datasets/dataset1/coco_format/post_quality_check"
-    # convert_iscrowd(annotations_path)
-    # split_postqc_dataset(annotations_path, output_path)
+    print("Combining pre-quality checked datasets")
+
+    # Merge pre-quality checked base dataset
+    datasets_to_merge = [
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_1.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_2.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_3.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_4.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/base_dataset/base_part_5.json"
+    ]
+    output_path = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
+    combine_preqc_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
+
+    # ...and corresponding checks (duplicate datasets used for agreement analysis)
+    datasets_to_merge = [
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_1.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_2.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_3.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_4.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_1/duplicate_1_part_5.json"
+    ]
+    output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
+    combine_preqc_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
+
+    datasets_to_merge = [
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_1.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_2.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_3.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_4.json",
+        "../datasets/dataset1/coco_format/pre_quality_check/raw_data/analysis_duplicate_2/duplicate_2_part_5.json"
+    ]
+    output_path = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
+    combine_preqc_datasets(datasets_to_merge, output_path)
+    convert_iscrowd(output_path)
+
+    print("Splitting post-quality checked datasets")
+
+    annotations_path = "../datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json"
+    output_path = "../datasets/dataset1/coco_format/post_quality_check"
+    convert_iscrowd(annotations_path)
+    split_postqc_dataset(annotations_path, output_path)
 
     # ----------------------------------------------------------------------------
 
@@ -508,7 +507,7 @@ def main():
     print("val size: " + str(len(val)))
 
     print("Finished stratification")
-    exit()
+
     # ----------------------------------------------------------------------------
 
     # Split the pre and qpost quality checked datasets using the stratified output, create train, test, and val datasets for COCO and YOLO
