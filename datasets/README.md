@@ -34,6 +34,23 @@ Final directories:
 │   │   │   │   │   ├───train.json
 │   │   │   │   │   ├───val.json
 │   │   │   │   ├───raw_data
+│   │   └───seed_stats
+│   │   │   ├───pre_quality_check
+│   │   │   │   ├───analysis_duplicate_1_stats.csv
+│   │   │   │   ├───analysis_duplicate_2_stats.csv
+│   │   │   │   ├───base_dataset_stats.csv
+│   │   │   │   ├───model_data
+│   │   │   │   │   ├───test_stats.csv
+│   │   │   │   │   ├───train_stats.csv
+│   │   │   │   │   ├───val_stats.csv
+│   │   │   ├───post_quality_check
+│   │   │   │   ├───analysis_duplicate_1_stats.csv
+│   │   │   │   ├───analysis_duplicate_2_stats.csv
+│   │   │   │   ├───base_dataset_stats.csv
+│   │   │   │   ├───model_data
+│   │   │   │   │   ├───test_stats.csv
+│   │   │   │   │   ├───train_stats.csv
+│   │   │   │   │   ├───val_stats.csv
 │   │   └───yolo_format
 │   │       ├───post_quality_check
 │   │       │   ├───images
