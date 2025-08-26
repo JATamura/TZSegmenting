@@ -387,7 +387,6 @@ def main():
     path_to_check_1 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_1.json"
     path_to_check_2 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_2.json"
 
-
     with open(path_to_part, 'r') as file:
         part = json.load(file)
 
@@ -497,7 +496,7 @@ def main():
             compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=False), 3)
         ]
         print(agreement.loc[:, ["per_img_mean", "dataset_total"]])
-        agreement.to_csv(os.path.join(output_path, "new_metrics_" + str(iou_thresh) + ".csv"), index=True)
+        agreement.to_csv(os.path.join(output_path, "metrics_" + str(iou_thresh) + ".csv"), index=True)
 
         all_a = create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=False)
 
