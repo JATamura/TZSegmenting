@@ -1,0 +1,12 @@
+,Number of annotations
+"('Non-Viable',)",25057
+"('Empty',)",2853
+"('Viable',)",520
+"('Non-Viable', 'Empty')",2830
+"('Non-Viable', 'Viable')",1338
+"('Empty', 'Viable')",2
+"('Undetected', 'Non-Viable')",1808
+"('Undetected', 'Empty')",2254
+"('Undetected',)",803
+"('Undetected', 'Viable')",14
+Total,37479
