@@ -1,9 +1,5 @@
 # Hide data
-*.csv
 *.jpg
-*.json
-/data/*/*
-/data/*
 *.png
 */gbif_secrets.json
 *.secrets
