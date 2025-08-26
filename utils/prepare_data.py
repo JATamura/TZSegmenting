@@ -420,6 +420,55 @@ def convert_iscrowd(dataset_path):
     with open(dataset_path, 'w') as file:
         json.dump(data, file)
 
+def combine_train_and_val(train_path, val_path, output_path):
+    def partition(array, low, high):
+        pivot = array[high]
+        i = low - 1
+        for j in range(low, high):
+            if array[j]["id"] <= pivot["id"]:
+                i = i + 1
+                (array[i], array[j]) = (array[j], array[i])
+        (array[i + 1], array[high]) = (array[high], array[i + 1])
+        return i + 1
+
+    def quickSort(array, low, high):
+        if low < high:
+            pi = partition(array, low, high)
+            quickSort(array, low, pi - 1)
+            quickSort(array, pi + 1, high)
+
+    train_and_val = [train_path, val_path]
+
+    images = []
+    for a in train_and_val:
+        with open(a, 'r') as file:
+            images.extend(json.load(file)["images"])
+    quickSort(images, 0, len(images) - 1)
+    print(len([i["id"] for i in images]))
+
+    annotations = []
+    for a in train_and_val:
+        with open(a, 'r') as file:
+            annotations.extend(json.load(file)["annotations"])
+    import sys
+    sys.setrecursionlimit(len(annotations))
+    quickSort(annotations, 0, len(annotations) - 1)
+    print(len([i["id"] for i in annotations]))
+
+    combined = {
+        "licenses": [{"name": "", "id": 0, "url": ""}],
+        "info": {"contributor": "", "date_created": "",
+                 "description": "", "url": "", "version": "", "year": ""},
+        "categories": [{"id": 1, "name": "Viable", "supercategory": ""},
+                       {"id": 2, "name": "Non-Viable", "supercategory": ""},
+                       {"id": 3, "name": "Empty", "supercategory": ""}],
+        "images": images,
+        "annotations": annotations
+    }
+
+    with open(output_path, "w") as outfile:
+        json.dump(combined, outfile)
+
 def main():
     # Reorganise directories and datasets
 
@@ -610,6 +659,13 @@ def main():
                         seed_stats(dataset, stratify=False,
                                    output_path=os.path.join(stats_path, qc, dir),
                                    file_name=data.strip(".json") + "_stats")
+
+        # Combine post-quality checked training and validation data for final model training
+        combine_train_and_val(
+            "../datasets/dataset1/coco_format/post_quality_check/model_data/train.json",
+            "../datasets/dataset1/coco_format/post_quality_check/model_data/val.json",
+            "../datasets/dataset1/coco_format/post_quality_check/model_data/train_and_val.json"
+        )
 
     print("Complete")
 
