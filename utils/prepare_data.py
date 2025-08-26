@@ -4,7 +4,6 @@ import random
 import shutil
 import copy
 import numpy as np
-from matplotlib import pyplot as plt
 from shapely.geometry import Polygon
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -181,7 +180,7 @@ def split_postqc_dataset(annotations_path, output_path):
         image["id"] = i+1
     for i, annotation in enumerate(dupe_1_dataset["annotations"]):
         annotation["id"] = i+1
-    with open(os.path.join(output_path, "duplicate_1.json"), 'w') as file:
+    with open(os.path.join(output_path, "analysis_duplicate_1.json"), 'w') as file:
         json.dump(dupe_1_dataset, file)
 
     dupe_2_dataset = copy.deepcopy(default)
@@ -194,7 +193,7 @@ def split_postqc_dataset(annotations_path, output_path):
         image["id"] = i+1
     for i, annotation in enumerate(dupe_2_dataset["annotations"]):
         annotation["id"] = i+1
-    with open(os.path.join(output_path, "duplicate_2.json"), 'w') as file:
+    with open(os.path.join(output_path, "analysis_duplicate_2.json"), 'w') as file:
         json.dump(dupe_2_dataset, file)
 
 def extract_annotations(all_annotations, image_id):
@@ -239,7 +238,7 @@ def avg_bbox_size(annotations):
     avg_bbox = areas / len(annotations)
     return avg_bbox
 
-def seed_stats(dataset, output_path=None):
+def seed_stats(dataset, stratify=True, output_path="", file_name=""):
     """
     Calculate image-by-image statistics given a COCO dataset.
     :param      dataset: (dict) COCO dataset.
@@ -251,9 +250,9 @@ def seed_stats(dataset, output_path=None):
     nonviable = []
     empty = []
     total_counts = []
-    viable_ratios = []
-    avg_sizes = []
-    avg_bboxes = []
+    viability_ratios = []
+    avg_segm_sizes = []
+    avg_bbox_sizes = []
     for image in dataset["images"]:
         annotations = extract_annotations(dataset["annotations"], image["id"])
         if len(annotations) > 0:
@@ -262,27 +261,47 @@ def seed_stats(dataset, output_path=None):
             nonviable.append(len([a for a in annotations if a["category_id"] == 2]))
             empty.append(len([a for a in annotations if a["category_id"] == 3]))
             total_counts.append(len(annotations))
-            viable_ratios.append(len([a for a in annotations if a["category_id"] == 1]) / len(annotations))
-            avg_sizes.append(avg_seg_size(annotations))
-            avg_bboxes.append(avg_bbox_size(annotations))
-
-    total_bin = pd.qcut(total_counts, q=4, labels=False, duplicates='drop')
-    viable_bin = pd.qcut(viable, q=3, labels=False, duplicates='drop')
-    size_bin = pd.qcut(avg_sizes, q=4, labels=False, duplicates='drop')
+            viability_ratios.append(len([a for a in annotations if a["category_id"] == 1]) / len(annotations))
+            avg_segm_sizes.append(avg_seg_size(annotations))
+            avg_bbox_sizes.append(avg_bbox_size(annotations))
 
     stats = pd.DataFrame(
-        {"file_names": file_names,
-         "viable": viable,
-         "nonviable": nonviable,
-         "empty": empty,
-         "total": total_counts,
-         "viable_ratio": viable_ratios,
-         "avg_sizes": np.sqrt(avg_sizes),
-         "avg_bboxes": np.sqrt(avg_bboxes),
-         "total_bin": total_bin,
-         "viable_bin": viable_bin,
-         "size_bin": size_bin}
+        {
+            "file_names": file_names,
+            "viable": viable,
+            "nonviable": nonviable,
+            "empty": empty,
+            "total": total_counts,
+            "viability_ratio": viability_ratios,
+            "avg_segm_sizes": np.sqrt(avg_segm_sizes),
+            "avg_bbox_sizes": np.sqrt(avg_bbox_sizes)
+         }
     )
+
+    if stratify:
+        total_bin = pd.qcut(total_counts, q=4, labels=False, duplicates='drop')
+        viable_bin = pd.qcut(viable, q=3, labels=False, duplicates='drop')
+        size_bin = pd.qcut(avg_segm_sizes, q=4, labels=False, duplicates='drop')
+        stratification_stats = pd.DataFrame(
+            {
+                "total_bin": total_bin,
+                "viable_bin": viable_bin,
+                "size_bin": size_bin
+            }
+        )
+        stats = pd.concat([stats, stratification_stats], axis=1)
+    else:
+        whole_dataset = pd.Series({
+            "file_names": "whole_dataset",
+            "viable": sum(viable),
+            "nonviable": sum(nonviable),
+            "empty": sum(empty),
+            "total": sum(total_counts),
+            "viability_ratio": np.mean(viability_ratios),
+            "avg_segm_sizes": np.mean(np.sqrt(avg_segm_sizes)),
+            "avg_bbox_sizes": np.mean(np.sqrt(avg_bbox_sizes))
+        })
+        stats.loc[len(stats)] = whole_dataset
 
     # # Creates graph to visualise seed count histogram.
     # plt.hist(stats["total"], bins=20, edgecolor='black')
@@ -291,7 +310,10 @@ def seed_stats(dataset, output_path=None):
     # plt.show()
 
     if output_path:
-        stats.describe(include="all").to_csv(os.path.join(output_path, "summary.csv"))
+        if not file_name:
+            file_name = "seed_stats"
+        stats.describe(include="all").to_csv(os.path.join(output_path, file_name + ".csv"))
+    print(stats)
 
     return stats
 
@@ -495,11 +517,9 @@ def main():
         "../datasets/dataset1/yolo_format/pre_quality_check",
         "../datasets/dataset1/yolo_format/post_quality_check"
     ]
+
     if not os.path.exists("../datasets/dataset1/yolo_format"):
         os.makedirs("../datasets/dataset1/yolo_format")
-    for directory in yolo_dir:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
     for i in range(len(coco_dir)):
         if not os.path.exists(coco_dir[i]):

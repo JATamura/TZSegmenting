@@ -2,7 +2,6 @@ import os
 import json
 import numpy as np
 import shapely
-from IPython.core.display_functions import display
 from shapely.geometry import Polygon
 import krippendorff
 import copy
@@ -375,67 +374,7 @@ def compute_randolph(annotations, num_annotators, count_undetected=True, method=
         f_kappa = irr.fleiss_kappa(irr.aggregate_raters(np.array(categories_given).transpose())[0], method=method)
     return categories_given, f_kappa
 
-
-def compute_some_basic_stats():
-    # Compute seed stats across the 5 part dataset
-
-    dataset_path = "../datasets/dataset1/coco/post_quality_check"
-    file_name = "_postqc.json"
-
-    seed_stats = {"part1": {},
-                  "part2": {},
-                  "part3": {},
-                  "part4": {},
-                  "part5": {}}
-    total_images = 0
-    total_seeds = 0
-    total_viable = 0
-    total_nonviable = 0
-    total_empty = 0
-
-    for part, stat in seed_stats.items():
-        path_to_labels = (os.path.join(dataset_path,
-                                       (part + file_name)))
-        with open(path_to_labels, 'r') as file:
-            data = json.load(file)
-        seed_stats[part]["total_images"] = len(data["images"])
-        label_num = count_labels(data)[0]
-        seed_stats[part]["total_seeds"] = len(data["annotations"])
-        seed_stats[part]["seeds_per_image"] = len(data["annotations"]) / len(data["images"])
-        seed_stats[part]["viable_num"] = label_num[1]
-        seed_stats[part]["nonviable_num"] = label_num[2]
-        seed_stats[part]["empty_num"] = label_num[3]
-        seed_stats[part]["viable_ratio"] = label_num[1] / len(data["annotations"])
-        seed_stats[part]["nonviable_ratio"] = label_num[2] / len(data["annotations"])
-        seed_stats[part]["empty_ratio"] = label_num[3] / len(data["annotations"])
-
-        total_images += len(data["images"])
-        total_seeds += len(data["annotations"])
-        total_viable += label_num[1]
-        total_nonviable += label_num[2]
-        total_empty += label_num[3]
-
-    # Compute seed stats for the combined, full dataset
-    seed_stats["full_dataset"] = {}
-    seed_stats["full_dataset"]["total_images"] = total_images
-    seed_stats["full_dataset"]["total_seeds"] = total_seeds
-    seed_stats["full_dataset"]["seeds_per_image"] = total_seeds / total_images
-    seed_stats["full_dataset"]["viable_num"] = total_viable
-    seed_stats["full_dataset"]["nonviable_num"] = total_nonviable
-    seed_stats["full_dataset"]["empty_num"] = total_empty
-    seed_stats["full_dataset"]["viable_ratio"] = total_viable / total_seeds
-    seed_stats["full_dataset"]["nonviable_ratio"] = total_nonviable / total_seeds
-    seed_stats["full_dataset"]["empty_ratio"] = total_empty / total_seeds
-
-    display(pd.DataFrame(seed_stats))
-    # pd.DataFrame(seed_stats).to_csv("../dataset_stats/check2_seed_stats.csv")
-
-
 def main():
-    compute_some_basic_stats()
-
-    # ----------------------------------------------------------------------------
-
     # Extract all image names and annotations needed for agreement analysis
 
     # # Paths to pre-quality checked datasets and corresponding duplicates
@@ -466,12 +405,6 @@ def main():
         agreement_analysis_image_names = pd.DataFrame(check_1["images"]).loc[:, "file_name"]
     else:
         print("Check 1 =/= Check 2")
-
-    # Faulty analysis images in pre quality checked dataset (missing annotations, rejected images, etc.)
-    # rejected_imgs = ["226.jpg", "231.jpg", "261.jpg", "271.jpg", "311.jpg", "316.jpg", "406.jpg", "481.jpg"]
-    # for rejected_img in rejected_imgs:
-    #     agreement_analysis_image_names.pop(
-    #         agreement_analysis_image_names[agreement_analysis_image_names == rejected_img].index[0])
 
     # Merge original and check datasets
     all_datasets = [part, check_1, check_2]
@@ -511,7 +444,7 @@ def main():
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    ious = [0.5]
+    ious = [0.3]
     for i in ious:
         iou_thresh = i
         print(iou_thresh)
