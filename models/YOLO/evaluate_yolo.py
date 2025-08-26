@@ -1,6 +1,4 @@
 import sys
-from dataclasses import fields
-from xmlrpc.client import boolean
 
 sys.path.append("/mnt/shared/scratch/jtamura/BloombergOrchidProject")
 sys.path.append("/C:/Users/jta10wk/PycharmProjects/BloombergOrchidProject")
@@ -9,11 +7,9 @@ import cv2
 from matplotlib import pyplot as plt
 import json
 import os
-import numpy as np
 from shapely.geometry import Polygon
 from ultralytics import YOLO
-from utils.evaluate import format_gt, evaluate_segmentations
-from pycocotools.coco import COCO
+from misc.evaluate import format_gt, evaluate_segmentations
 from detectron2.structures import Instances, Boxes
 from detectron2.evaluation.coco_evaluation import instances_to_coco_json, COCOEvaluator
 from models.mask_rcnn.mrcnn_model import build_config
