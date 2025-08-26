@@ -1,3 +1,4 @@
+import datetime
 import json
 import cv2
 import os
@@ -92,7 +93,7 @@ def register_seeds(img_path, train_annotations=None, test_annotations=None, val_
                                 },
                                 val_annotations, img_path)
 
-def build_config(img_path, train_annotations, test_annotations, val_annotations, param_dict={}):
+def build_config(img_path, train_annotations, test_annotations, val_annotations, model_name="", param_dict={}):
     # set up the logger
     setup_logger()
 
@@ -101,6 +102,7 @@ def build_config(img_path, train_annotations, test_annotations, val_annotations,
 
     # initialise custom config
     cfg = get_cfg()
+
     # Mask RCNN with ResNet101
     # config = "COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml"
 
@@ -221,9 +223,15 @@ def build_config(img_path, train_annotations, test_annotations, val_annotations,
     # max number of instances per image
     cfg.TEST.DETECTIONS_PER_IMAGE = 800
     cfg.TEST.EVAL_PERIOD = 2000
-    # cfg.MODEL.DEVICE = "cpu"
 
     for param, value in param_dict.items():
         exec(param + " = " + str(value))
+
+    if not model_name:
+        date = datetime.datetime.now()
+        model_name = "model_" + str(date.year) + str(date.month) + str(date.day)
+    cfg.OUTPUT_DIR = os.path.join(cfg.OUTPUT_DIR, model_name)
+    if not os.path.exists(cfg.OUTPUT_DIR):
+        os.makedirs(cfg.OUTPUT_DIR)
 
     return cfg

@@ -80,7 +80,7 @@ def main():
     cfg.MODEL.WEIGHTS = "models/mask_rcnn/model_weights/output_06_25_cascade_16000/model_final.pth"
     model_config = yaml.safe_load(cfg.dump())
     print(model_config)
-    with open('config.yaml', 'w') as file:
+    with open(os.path.join(cfg.OUTPUT_DIR, 'config.yaml'), 'w') as file:
         yaml.dump(model_config, file)
 
     # Build config and trainer

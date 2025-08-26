@@ -99,7 +99,6 @@ if __name__ == "__main__":
 
     ## Evaluation using detectron2 evaluation
     results = yolo_to_coco_evaluation(model, True)
-    exit()
 
     ## Evaluation using my implementation
     confidence_thresholds = [i / 100 for i in range(5, 100, 5)]
