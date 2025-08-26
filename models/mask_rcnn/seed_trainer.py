@@ -1,6 +1,7 @@
 import weakref
 import os
 import torch
+import yaml
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.engine import DefaultTrainer, hooks
 from detectron2.evaluation import DatasetEvaluators, COCOEvaluator, DatasetEvaluator
@@ -68,15 +69,22 @@ class SeedTrainer(DefaultTrainer):
         )
 
 def main():
-    dataset_path = "../../datasets/dataset1/all_images"
-    train = "../../datasets/dataset1/coco/postqc_model_data/train.json"
-    test = "../../datasets/dataset1/coco/postqc_model_data/test.json"
-    val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
+    image_path = "../../datasets/dataset1/all_images"
+    train = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train.json"
+    test = "../../datasets/dataset1/coco_format/post_quality_check/model_data/test.json"
+    val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
 
     param_dict = {}
 
+    cfg = build_config(image_path, train, test, val, param_dict)
+    cfg.MODEL.WEIGHTS = "models/mask_rcnn/model_weights/output_06_25_cascade_16000/model_final.pth"
+    model_config = yaml.safe_load(cfg.dump())
+    print(model_config)
+    with open('config.yaml', 'w') as file:
+        yaml.dump(model_config, file)
+
     # Build config and trainer
-    cfg = build_config(dataset_path, train, test, val, param_dict)
+    cfg = build_config(image_path, train, test, val, param_dict)
     trainer = SeedTrainer(cfg)
     trainer.resume_or_load(resume=False)
     checkpointer = DetectionCheckpointer(
@@ -89,7 +97,6 @@ def main():
     trainer.register_hooks(
         [hooks.BestCheckpointer(eval_period=cfg.TEST.EVAL_PERIOD, checkpointer=checkpointer, val_metric="bbox/AP50")]
     )
-    trainer._hooks[-1], trainer._hooks[-2] = trainer._hooks[-2], trainer._hooks[-1]
 
     return trainer.train()
 

@@ -181,9 +181,9 @@ def main():
 
     from configure_parameters import register_seeds
     image_path = "../../datasets/dataset1/all_images"
-    train = "../../datasets/dataset1/coco/postqc_model_data/train.json"
-    test = "../../datasets/dataset1/coco/postqc_model_data/test.json"
-    val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
+    train = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train.json"
+    test = "../../datasets/dataset1/coco_format/post_quality_check/model_data/test.json"
+    val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
     register_seeds(image_path, train, test, val)
 
     config_path = "model_weights/output_06_25_cascade_16000/config.yaml"

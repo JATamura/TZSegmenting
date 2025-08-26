@@ -12,14 +12,14 @@ from ultralytics import YOLO
 from misc.evaluate import format_gt, evaluate_segmentations
 from detectron2.structures import Instances, Boxes
 from detectron2.evaluation.coco_evaluation import instances_to_coco_json, COCOEvaluator
-from models.mask_rcnn.mrcnn_model import build_config
+from models.mask_rcnn.configure_parameters import build_config
 
 def yolo_to_coco_evaluation(model, cls_agnostic=True):
 
     image_path = "../../datasets/dataset1/all_images"
-    train = "../../datasets/dataset1/coco/postqc_model_data/train.json"
-    test = "../../datasets/dataset1/coco/postqc_model_data/test.json"
-    val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
+    train = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train.json"
+    test = "../../datasets/dataset1/coco_format/post_quality_check/model_data/test.json"
+    val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
     cfg = build_config(image_path, train, test, val)
     # TODO: Should the second argument here not be `tasks = 'segm'`? I'm not sure cfg is correct
     evaluator = COCOEvaluator("orchid_val", cfg, False, max_dets_per_image=800)
