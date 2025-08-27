@@ -282,7 +282,7 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
             "avg_bbox_sizes": np.sqrt(avg_bbox_sizes)
          }
     )
-
+    summary = None
     if stratify:
         total_bin = pd.qcut(total_counts, q=4, labels=False, duplicates='drop')
         viable_bin = pd.qcut(viable, q=3, labels=False, duplicates='drop')
@@ -296,6 +296,7 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
         )
         stats = pd.concat([stats, stratification_stats], axis=1)
     else:
+        summary = stats.describe(include="all")
         whole_dataset = pd.Series({
             "file_names": "whole_dataset",
             "viable": sum(viable),
@@ -318,6 +319,8 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
         if not file_name:
             file_name = "seed_stats"
         stats.to_csv(os.path.join(output_path, file_name + ".csv"))
+        if summary is not None:
+            summary.to_csv(os.path.join(output_path, file_name + "_summary.csv"))
 
     return stats
 
