@@ -1,3 +1,5 @@
+# seed_evaluator has methods for adding more evaluation metrics
+
 import numpy as np
 import torch
 from torch import Tensor

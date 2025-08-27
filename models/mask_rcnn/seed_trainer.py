@@ -1,3 +1,5 @@
+# Seed trainer uses current params to train a model, and run to train final model.
+
 import weakref
 import os
 import torch

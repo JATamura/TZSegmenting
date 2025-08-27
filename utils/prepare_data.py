@@ -426,6 +426,11 @@ def convert_iscrowd(dataset_path):
 def main():
     # Reorganise directories and datasets
 
+    # Currently final data is in T drive, but it may be moved at some point
+    # OrchidAnnotationProject_COCO/instances_default.json gives 'TZSegmenting/datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json'
+    # OrchidAnnotationProject_COCO/images(?) gives TZSegmenting/datasets/dataset1/all_images
+    # CVAT_EXPORTS/pre_QA_annotations give some of the pre quality checked annotations but there may be issues with the duplicates.
+
     print("Combining pre-quality checked datasets")
 
     # Merge pre-quality checked base dataset
