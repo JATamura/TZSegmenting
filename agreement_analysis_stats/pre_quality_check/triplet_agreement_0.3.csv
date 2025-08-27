@@ -1,0 +1,17 @@
+,Number of annotations
+"('Non-Viable', 'Non-Viable', 'Non-Viable')",7313
+"('Empty', 'Empty', 'Empty')",315
+"('Viable', 'Viable', 'Viable')",122
+"('Empty', 'Empty', 'Non-Viable')",475
+"('Empty', 'Non-Viable', 'Non-Viable')",650
+"('Non-Viable', 'Non-Viable', 'Viable')",471
+"('Non-Viable', 'Viable', 'Viable')",167
+"('Non-Viable', 'Non-Viable', 'Undetected')",658
+"('Empty', 'Empty', 'Undetected')",311
+"('Empty', 'Non-Viable', 'Undetected')",202
+"('Empty', 'Undetected', 'Undetected')",794
+"('Non-Viable', 'Undetected', 'Undetected')",562
+"('Undetected', 'Viable', 'Viable')",10
+"('Non-Viable', 'Undetected', 'Viable')",25
+"('Undetected', 'Undetected', 'Viable')",6
+Total,12081
