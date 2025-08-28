@@ -93,13 +93,9 @@ def register_seeds(img_path, train_annotations=None, test_annotations=None, val_
                                 },
                                 val_annotations, img_path)
 
-def build_config(img_path, train_annotations, test_annotations, val_annotations, model_name="", param_dict={}):
+def build_config(img_path, model_name="", param_dict={}):
     # set up the logger
     setup_logger()
-
-    # register the training, validation, and test datasets into COCO
-    register_seeds(img_path, train_annotations, test_annotations, val_annotations)
-
     # initialise custom config
     cfg = get_cfg()
 
@@ -119,6 +115,8 @@ def build_config(img_path, train_annotations, test_annotations, val_annotations,
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3
     cfg.DATASETS.TRAIN = ("orchid_train",)
     cfg.DATASETS.TEST = ("orchid_val",)
+
+    cfg.OUTPUT_DIR = "model_weights"
 
     cfg.DATALOADER.SAMPLER_TRAIN = "RepeatFactorTrainingSampler"
     cfg.DATALOADER.REPEAT_THRESHOLD = 0.5
@@ -141,10 +139,10 @@ def build_config(img_path, train_annotations, test_annotations, val_annotations,
     cfg.SOLVER.REFERENCE_WORLD_SIZE = 1
     cfg.SOLVER.IMS_PER_BATCH = 4
     cfg.SOLVER.BASE_LR = 0.0005
-    cfg.SOLVER.MAX_ITER = 16000
+    cfg.SOLVER.MAX_ITER = 23000
     cfg.SOLVER.WARMUP_ITERS = int(cfg.SOLVER.MAX_ITER / 5)
     # cfg.SOLVER.STEPS = [2000, 3000]
-    cfg.SOLVER.CHECKPOINT_PERIOD = 4000
+    cfg.SOLVER.CHECKPOINT_PERIOD = 4600
     cfg.SOLVER.LR_SCHEDULER_NAME = "WarmupCosineLR"
     cfg.SOLVER.WEIGHT_DECAY = 0.01
 
@@ -191,30 +189,32 @@ def build_config(img_path, train_annotations, test_annotations, val_annotations,
     cfg.MODEL.ROI_BOX_HEAD.FED_LOSS_NUM_CLASSES = 3
 
     cfg.MODEL.RPN.IOU_THRESHOLDS = [0.3, 0.7]
-    cfg.MODEL.RPN.BATCH_SIZE_PER_IMAGE = 512
-    cfg.MODEL.RPN.POSITIVE_FRACTION = 0.7
+    cfg.MODEL.RPN.BATCH_SIZE_PER_IMAGE = 256
+    cfg.MODEL.RPN.POSITIVE_FRACTION = 0.8
 
     # overlapping bounding box threshold for instances
-    cfg.MODEL.RPN.PRE_NMS_TOPK_TRAIN = 2500
+    cfg.MODEL.RPN.PRE_NMS_TOPK_TRAIN = 3000
     cfg.MODEL.RPN.POST_NMS_TOPK_TRAIN = 1500
-    cfg.MODEL.RPN.PRE_NMS_TOPK_TEST = 2500
+    cfg.MODEL.RPN.PRE_NMS_TOPK_TEST = 3000
     cfg.MODEL.RPN.POST_NMS_TOPK_TEST = 1500
-    cfg.MODEL.RPN.NMS_THRESH = 0.8
+    cfg.MODEL.RPN.NMS_THRESH = 0.5
 
     # ratio of foreground images
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 512
     # number of foreground + background proposals
     cfg.MODEL.ROI_HEADS.POSITIVE_FRACTION = 0.8
-    cfg.MODEL.ROI_BOX_CASCADE_HEAD.BBOX_REG_WEIGHTS = (
-        (10.0, 10.0, 5.0, 5.0),
-        (20.0, 20.0, 10.0, 10.0),
-        (30.0, 30.0, 15.0, 15.0),
-        (40.0, 40.0, 20.0, 20.0),
-    )
+
+    # cfg.MODEL.ROI_BOX_CASCADE_HEAD.BBOX_REG_WEIGHTS = (
+    #     (10.0, 10.0, 5.0, 5.0),
+    #     (20.0, 20.0, 10.0, 10.0),
+    #     (30.0, 30.0, 15.0, 15.0),
+    #     (40.0, 40.0, 20.0, 20.0),
+    # )
+    # cfg.MODEL.ROI_BOX_CASCADE_HEAD.IOUS = (0.5, 0.6, 0.7, 0.8)
+
     cfg.MODEL.ROI_HEADS.IOU_THRESHOLDS = [0.5]
-    cfg.MODEL.ROI_BOX_CASCADE_HEAD.IOUS = (0.5, 0.6, 0.7, 0.8)
     # threshold for confidence
-    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.05
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     # removing overlapping bounding boxes of the same class
     cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.7
     cfg.INPUT.MIN_SIZE_TEST = 1600
@@ -222,7 +222,7 @@ def build_config(img_path, train_annotations, test_annotations, val_annotations,
 
     # max number of instances per image
     cfg.TEST.DETECTIONS_PER_IMAGE = 800
-    cfg.TEST.EVAL_PERIOD = 2000
+    cfg.TEST.EVAL_PERIOD = 1000
 
     for param, value in param_dict.items():
         exec(param + " = " + str(value))

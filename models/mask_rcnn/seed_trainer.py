@@ -13,7 +13,8 @@ from detectron2.data import DatasetMapper, build_detection_train_loader
 from detectron2.data import transforms as T
 from detectron2.engine import launch
 from seed_evaluator import ClsAgnNMSEvaluator, ClassCountEvaluator, SeedSegmentationEvaluator
-from models.mask_rcnn.configure_parameters import build_config
+from models.mask_rcnn.configure_parameters import build_config, register_seeds
+
 
 class SeedTrainer(DefaultTrainer):
     """
@@ -70,23 +71,20 @@ class SeedTrainer(DefaultTrainer):
             weight_decay=cfg.SOLVER.WEIGHT_DECAY,
         )
 
-def main():
+def train_model():
     image_path = "../../datasets/dataset1/all_images"
-    train = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train.json"
+    # train = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train.json"
+    train_and_val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train_and_val.json"
     test = "../../datasets/dataset1/coco_format/post_quality_check/model_data/test.json"
-    val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
+    # val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
 
-    param_dict = {}
-
-    cfg = build_config(image_path, train, test, val, param_dict)
-    cfg.MODEL.WEIGHTS = "models/mask_rcnn/model_weights/output_06_25_cascade_16000/model_final.pth"
-    model_config = yaml.safe_load(cfg.dump())
-    print(model_config)
-    with open(os.path.join(cfg.OUTPUT_DIR, 'config.yaml'), 'w') as file:
-        yaml.dump(model_config, file)
+    # register the training, validation, and test datasets into COCO
+    register_seeds(image_path, train_annotations=train_and_val, test_annotations=None, val_annotations=test)
 
     # Build config and trainer
-    cfg = build_config(image_path, train, test, val, param_dict)
+    model_name = "final_tz_segmentor"
+    param_dict = {}
+    cfg = build_config(image_path, model_name=model_name, param_dict=param_dict)
     trainer = SeedTrainer(cfg)
     trainer.resume_or_load(resume=False)
     checkpointer = DetectionCheckpointer(
@@ -102,8 +100,18 @@ def main():
 
     return trainer.train()
 
+def save_model():
+    image_path = "../../datasets/dataset1/all_images"
+    cfg = build_config(image_path)
+    cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_best.pth")
+    model_config = yaml.safe_load(cfg.dump())
+    with open(os.path.join(cfg.OUTPUT_DIR, 'config.yaml'), 'w') as file:
+        yaml.dump(model_config, file)
+
 if __name__ == "__main__":
-    # main()
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
-    launch(main, torch.cuda.device_count())
+    launch(train_model(), torch.cuda.device_count())
+    save_model()
+
+

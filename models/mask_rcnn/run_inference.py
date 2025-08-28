@@ -185,17 +185,3 @@ if __name__ == "__main__":
                                detections.class_id[d],
                                detections.tracker_id,
                                data={})
-
-    fig, ax = plt.subplots()
-    v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]),
-                   scale=1.2, instance_mode=ColorMode.SEGMENTATION, font_size_scale=1.5)
-    masks = {'instances': Instances(im.shape[:2],
-                                    pred_classes=detections.class_id,
-                                    pred_masks=detections.mask)}
-    out = v.overlay_instances(masks=masks["instances"].pred_masks,
-                              assigned_colors=[[1, 0, 0] for i in range(len(masks["instances"].pred_masks))])
-    # out = v.draw_instance_predictions(masks["instances"].to("cpu"), jittering=False)
-    ax.imshow(cv2.cvtColor(out.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
-    # # fig.savefig(img_path + "../../output/seg_" + img_path[-7:], dpi=2000)
-    # fig.savefig("outputs/images/grey_test.jpg", dpi=1200)
-    plt.show()

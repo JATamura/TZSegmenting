@@ -70,7 +70,7 @@ class SeedSegmentationEvaluator(COCOEvaluator):
     def evaluate(self, img_ids=None):
         results = {}
         for k, v in super().evaluate().items():
-            results[k+"_cls_agn_nms"] = v
+            results[k+"_seed_class"] = v
         return results
 
 class ClassCountEvaluator(COCOEvaluator):
