@@ -374,18 +374,23 @@ def compute_randolph(annotations, num_annotators, count_undetected=True, method=
         f_kappa = irr.fleiss_kappa(irr.aggregate_raters(np.array(categories_given).transpose())[0], method=method)
     return categories_given, f_kappa
 
-def main():
+
+def main(pre_or_post: str):
     # Extract all image names and annotations needed for agreement analysis
 
     # # Paths to pre-quality checked datasets and corresponding duplicates
-    # path_to_part = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
-    # path_to_check_1 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
-    # path_to_check_2 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
+    if pre_or_post == 'pre':
+        path_to_part = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
+        path_to_check_1 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
+        path_to_check_2 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
+        output_path = "../agreement_analysis_stats/pre_quality_check"
 
-    # # Paths to post-quality checked datasets and corresponding duplicates
-    path_to_part = "../datasets/dataset1/coco_format/post_quality_check/base_dataset.json"
-    path_to_check_1 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_1.json"
-    path_to_check_2 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_2.json"
+    if pre_or_post == 'post':
+        # # Paths to post-quality checked datasets and corresponding duplicates
+        path_to_part = "../datasets/dataset1/coco_format/post_quality_check/base_dataset.json"
+        path_to_check_1 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_1.json"
+        path_to_check_2 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_2.json"
+        output_path = "../agreement_analysis_stats/post_quality_check"
 
     with open(path_to_part, 'r') as file:
         part = json.load(file)
@@ -439,13 +444,14 @@ def main():
 
     # Compute agreement analysis metrics for different IoU (intersection over union) thresholds
 
-    output_path = "../agreement_analysis_stats"
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
+    # he threshold for determining if an annotation was for the same seed or not was initially set to 0.5 but later changed to 0.3 as there
+    # was too much variance in how people annotated (even after quality checking) that even 0.5 was too high of a threshold to consider
+    # different annotations made as the same seed.
     ious = [0.3]
-    for i in ious:
-        iou_thresh = i
+    for iou_thresh in ious:
         print(iou_thresh)
         agreement = {}
         all_seed_validations = [[], [], []]
@@ -534,4 +540,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main('pre')
+    main('post')

@@ -1,3 +1,5 @@
+# run_inference contains methods for post-prediction processing.
+
 import importlib
 import cv2
 import os

@@ -282,7 +282,7 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
             "avg_bbox_sizes": np.sqrt(avg_bbox_sizes)
          }
     )
-
+    summary = None
     if stratify:
         total_bin = pd.qcut(total_counts, q=4, labels=False, duplicates='drop')
         viable_bin = pd.qcut(viable, q=3, labels=False, duplicates='drop')
@@ -296,6 +296,7 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
         )
         stats = pd.concat([stats, stratification_stats], axis=1)
     else:
+        summary = stats.describe(include="all")
         whole_dataset = pd.Series({
             "file_names": "whole_dataset",
             "viable": sum(viable),
@@ -318,6 +319,8 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
         if not file_name:
             file_name = "seed_stats"
         stats.to_csv(os.path.join(output_path, file_name + ".csv"))
+        if summary is not None:
+            summary.to_csv(os.path.join(output_path, file_name + "_summary.csv"))
 
     return stats
 
@@ -471,6 +474,11 @@ def combine_train_and_val(train_path, val_path, output_path):
 
 def main():
     # Reorganise directories and datasets
+
+    # Currently final data is in T drive, but it may be moved at some point
+    # OrchidAnnotationProject_COCO/instances_default.json gives 'TZSegmenting/datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json'
+    # OrchidAnnotationProject_COCO/images(?) gives TZSegmenting/datasets/dataset1/all_images
+    # CVAT_EXPORTS/pre_QA_annotations give some of the pre quality checked annotations but there may be issues with the duplicates.
 
     print("Combining pre-quality checked datasets")
 
