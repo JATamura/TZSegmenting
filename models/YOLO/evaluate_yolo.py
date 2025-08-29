@@ -87,9 +87,9 @@ def in_built_eval(model, data_path):
 if __name__ == "__main__":
 
     image_path = "../../datasets/dataset1/all_images"
-    path_to_weights = "runs/segment/post_qc_yolo_model_11/weights/best.pt"
-    annotations_path = "../../datasets/dataset1/coco/post_quality_check/all_postqc.json"
-    val = "../../datasets/dataset1/coco/postqc_model_data/val.json"
+    path_to_weights = "model_weights/post_qc_yolo_model_11/weights/best.pt"
+    annotations_path = "../../datasets/dataset1/coco_format/post_quality_check/base_dataset.json"
+    val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
 
     model = YOLO(path_to_weights)
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     for img in val_data["images"]:
         print(img["file_name"] + " mAP50:")
         results = model(os.path.join(image_path, img["file_name"]),
-                        conf=0.05, agnostic_nms=cls_agnostic, max_det=800,
+                        conf=0.05, agnostic_nms=True, max_det=800,
                         imgsz=(img["height"], img["width"]))
 
         model_polygons, model_classes, model_scores = format_yolo_predictions(results,

@@ -188,7 +188,7 @@ def main():
     val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
     register_seeds(image_path, train, test, val)
 
-    config_path = "model_weights/output_06_25_cascade_16000/config.yaml"
+    config_path = "model_weights/final_tz_segmentor/config.yaml"
 
     param_dict = {
         "cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST": 0.5,

@@ -93,7 +93,7 @@ def register_seeds(img_path, train_annotations=None, test_annotations=None, val_
                                 },
                                 val_annotations, img_path)
 
-def build_config(img_path, model_name="", param_dict={}):
+def build_config(img_path, model_name="", **kwargs):
     # set up the logger
     setup_logger()
     # initialise custom config
@@ -216,7 +216,7 @@ def build_config(img_path, model_name="", param_dict={}):
     # threshold for confidence
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     # removing overlapping bounding boxes of the same class
-    cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.7
+    cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.5
     cfg.INPUT.MIN_SIZE_TEST = 1600
     cfg.INPUT.MAX_SIZE_TEST = 1600
 
@@ -224,7 +224,7 @@ def build_config(img_path, model_name="", param_dict={}):
     cfg.TEST.DETECTIONS_PER_IMAGE = 800
     cfg.TEST.EVAL_PERIOD = 1000
 
-    for param, value in param_dict.items():
+    for param, value in kwargs.items():
         exec(param + " = " + str(value))
 
     if not model_name:

@@ -102,7 +102,7 @@ def train_model():
 
 def save_model():
     image_path = "../../datasets/dataset1/all_images"
-    cfg = build_config(image_path)
+    cfg = build_config(image_path, model_name="final_tz_segmentor")
     cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_best.pth")
     model_config = yaml.safe_load(cfg.dump())
     with open(os.path.join(cfg.OUTPUT_DIR, 'config.yaml'), 'w') as file:
