@@ -605,6 +605,9 @@ def main():
 
         # Convert the COCO datasets to YOLO
         print("Converting " + coco_dirs[i] + " to YOLO")
+        if os.path.exists( yolo_dirs[i]):
+            raise FileExistsError(f'convert_coco method will increment the save_dir path if save directory already exists and this isnt desirable.'
+                                  f'Delete the directory before continuing: {yolo_dirs[i]}')
         convert_coco(coco_dirs[i], yolo_dirs[i], use_segments=True, cls91to80=False)
 
         # Create directories for YOLO datasets

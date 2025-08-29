@@ -9,7 +9,5 @@ segment and classify seeds in these images as Viable, Non-Viable or Empty.
 
 ### Acknowledgements
 
-#### Dataset
-
-OrchAId TZ viability dataset by the Royal Botanic Gardens, Kew, Silo National des Graines Forestieres, Madagascar, the Ministry of Agriculture, Lands, Housing and Environment, Monsterrat, Instituto de Investigação Agrária de Moçambique, Mozambique, Departmento de Recursos Naturales y Ambientales, Puerto Rico & the National Parks Trust of the Virgin Islands.
+The OrchAId TZ viability dataset was developed by the Royal Botanic Gardens, Kew, Silo National des Graines Forestieres, Madagascar, the Ministry of Agriculture, Lands, Housing and Environment, Monsterrat, Instituto de Investigação Agrária de Moçambique, Mozambique, Departmento de Recursos Naturales y Ambientales, Puerto Rico & the National Parks Trust of the Virgin Islands.
 

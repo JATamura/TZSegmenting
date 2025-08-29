@@ -100,6 +100,7 @@ if __name__ == "__main__":
     ## Evaluation using detectron2 evaluation
     results = yolo_to_coco_evaluation(model, True)
 
+    ## The parts after exit() is what I used to check if YOLO and detectron2 had the same calculations for mAP but yolo_to_coco_evaluation is the function that standardises YOLO.
     exit()
 
     ## Evaluation using my implementation
