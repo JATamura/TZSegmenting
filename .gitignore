@@ -1,6 +1,4 @@
 # Hide data
-*.jpg
-*.png
 */gbif_secrets.json
 *.secrets
 *collaborators.txt
