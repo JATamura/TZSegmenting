@@ -138,7 +138,7 @@ def build_config(img_path, model_name="", **kwargs):
     # # standard parameters for machine learning
     cfg.SOLVER.REFERENCE_WORLD_SIZE = 1
     cfg.SOLVER.IMS_PER_BATCH = 4
-    cfg.SOLVER.BASE_LR = 0.0005
+    cfg.SOLVER.BASE_LR = 0.0002
     cfg.SOLVER.MAX_ITER = 23000
     cfg.SOLVER.WARMUP_ITERS = int(cfg.SOLVER.MAX_ITER / 5)
     # cfg.SOLVER.STEPS = [2000, 3000]

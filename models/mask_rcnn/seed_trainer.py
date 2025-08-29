@@ -13,7 +13,7 @@ from detectron2.data import DatasetMapper, build_detection_train_loader
 from detectron2.data import transforms as T
 from detectron2.engine import launch
 from seed_evaluator import ClsAgnNMSEvaluator, ClassCountEvaluator, SeedSegmentationEvaluator
-from models.mask_rcnn.configure_parameters import build_config, register_seeds
+from configure_parameters import build_config, register_seeds
 
 
 class SeedTrainer(DefaultTrainer):

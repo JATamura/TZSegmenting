@@ -116,7 +116,7 @@ if __name__ == "__main__":
         "cfg.TEST.DETECTIONS_PER_IMAGE": 800,
         "cfg.INPUT.MIN_SIZE_TEST": 2000,
         "cfg.INPUT.MAX_SIZE_TEST": 2000,
-        # "cfg.MODEL.ROI_BOX_HEAD.USE_FED_LOSS": False
+        "cfg.MODEL.ROI_BOX_HEAD.USE_FED_LOSS": False
     }
     print("Getting model weights")
 
