@@ -13,6 +13,9 @@ import logging
 import cv2
 from pycocotools import mask as cocomask
 
+REPO_PATH = os.path.join(os.environ.get('KEWSCRATCHPATH'), 'TZSegmenting')
+
+
 # Source: https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch/#create-custom-coco-dataset
 def rle_to_coco(annotation: dict) -> list[dict]:
     """Transform the rle coco_format annotation (a single one) into coco_format style.
@@ -51,7 +54,6 @@ def rle_to_coco(annotation: dict) -> list[dict]:
     else:
         annotations = list()
         for i, seg in enumerate(segmentation):
-
             single_annotation = copy.deepcopy(annotation)
             single_annotation["segmentation_coords"] = (
                 seg.astype(float).flatten().tolist()
@@ -64,6 +66,7 @@ def rle_to_coco(annotation: dict) -> list[dict]:
             annotations.append(single_annotation)
 
     return annotations
+
 
 def combine_preqc_datasets(path_to_annotations, output_path):
     """
@@ -108,6 +111,7 @@ def combine_preqc_datasets(path_to_annotations, output_path):
 
     with open(output_path, "w") as outfile:
         json.dump(combined, outfile)
+
 
 def split_postqc_dataset(annotations_path, output_path):
     """
@@ -163,10 +167,10 @@ def split_postqc_dataset(annotations_path, output_path):
     for i, image in enumerate(base_dataset["images"]):
         for annotation in base_dataset["annotations"]:
             if annotation["image_id"] == image["id"]:
-                annotation["image_id"] = i+1
-        image["id"] = i+1
+                annotation["image_id"] = i + 1
+        image["id"] = i + 1
     for i, annotation in enumerate(base_dataset["annotations"]):
-        annotation["id"] = i+1
+        annotation["id"] = i + 1
     with open(os.path.join(output_path, "base_dataset.json"), 'w') as file:
         json.dump(base_dataset, file)
 
@@ -176,10 +180,10 @@ def split_postqc_dataset(annotations_path, output_path):
     for i, image in enumerate(dupe_1_dataset["images"]):
         for annotation in dupe_1_dataset["annotations"]:
             if annotation["image_id"] == image["id"]:
-                annotation["image_id"] = i+1
-        image["id"] = i+1
+                annotation["image_id"] = i + 1
+        image["id"] = i + 1
     for i, annotation in enumerate(dupe_1_dataset["annotations"]):
-        annotation["id"] = i+1
+        annotation["id"] = i + 1
     with open(os.path.join(output_path, "analysis_duplicate_1.json"), 'w') as file:
         json.dump(dupe_1_dataset, file)
 
@@ -189,12 +193,13 @@ def split_postqc_dataset(annotations_path, output_path):
     for i, image in enumerate(dupe_2_dataset["images"]):
         for annotation in dupe_2_dataset["annotations"]:
             if annotation["image_id"] == image["id"]:
-                annotation["image_id"] = i+1
-        image["id"] = i+1
+                annotation["image_id"] = i + 1
+        image["id"] = i + 1
     for i, annotation in enumerate(dupe_2_dataset["annotations"]):
-        annotation["id"] = i+1
+        annotation["id"] = i + 1
     with open(os.path.join(output_path, "analysis_duplicate_2.json"), 'w') as file:
         json.dump(dupe_2_dataset, file)
+
 
 def extract_annotations(all_annotations, image_id):
     """
@@ -209,6 +214,7 @@ def extract_annotations(all_annotations, image_id):
         if annotation["image_id"] == image_id:
             image_annotations.append(annotation)
     return image_annotations
+
 
 def avg_bbox_size(annotations):
     """
@@ -225,6 +231,7 @@ def avg_bbox_size(annotations):
     else:
         avg_bbox = 0
     return avg_bbox
+
 
 def avg_seg_size(annotations):
     """
@@ -243,6 +250,7 @@ def avg_seg_size(annotations):
     else:
         avg_seg = 0
     return avg_seg
+
 
 def seed_stats(dataset, stratify=True, output_path="", file_name=""):
     """
@@ -280,7 +288,7 @@ def seed_stats(dataset, stratify=True, output_path="", file_name=""):
             "viability_ratio": viability_ratios,
             "avg_segm_sizes": np.sqrt(avg_segm_sizes),
             "avg_bbox_sizes": np.sqrt(avg_bbox_sizes)
-         }
+        }
     )
     summary = None
     if stratify:
@@ -338,22 +346,22 @@ def stratify(stats, test_ratio=0.2, val_ratio=0.2):
 
     stats["stratify"] = (
         # stats["total_bin"].astype(str) + "_" +
-        stats["viable_bin"].astype(str) + "_" +
-        stats["size_bin"].astype(str)
+            stats["viable_bin"].astype(str) + "_" +
+            stats["size_bin"].astype(str)
     )
 
-    train, test_and_val = train_test_split(stats, test_size=test_ratio+val_ratio,
+    train, test_and_val = train_test_split(stats, test_size=test_ratio + val_ratio,
                                            random_state=0, stratify=stats["stratify"])
 
-    test, val = train_test_split(test_and_val, test_size=val_ratio/(test_ratio+val_ratio),
+    test, val = train_test_split(test_and_val, test_size=val_ratio / (test_ratio + val_ratio),
                                  random_state=0, stratify=test_and_val["stratify"])
 
     return train, test, val
 
+
 # Splitting the dataset
 def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
                           train_imgs=[], val_imgs=[], test_imgs=[], random_seed=None):
-
     if random_seed != None:
         random.seed(random_seed)
     with open(path_to_annotations, 'r') as file:
@@ -410,6 +418,7 @@ def train_test_split_coco(path_to_annotations, val_ratio=0.2, test_ratio=0.2,
 
     return train, test, val
 
+
 def convert_iscrowd(dataset_path):
     """
     Converts all iscrowd values to 0. Specific to the seeds dataset as seeds were never annotated in groups.
@@ -422,6 +431,7 @@ def convert_iscrowd(dataset_path):
         ann["iscrowd"] = 0
     with open(dataset_path, 'w') as file:
         json.dump(data, file)
+
 
 def combine_train_and_val(train_path, val_path, output_path):
     def partition(array, low, high):
@@ -471,6 +481,7 @@ def combine_train_and_val(train_path, val_path, output_path):
 
     with open(output_path, "w") as outfile:
         json.dump(combined, outfile)
+
 
 def main():
     # Reorganise directories and datasets
@@ -605,7 +616,7 @@ def main():
 
         # Convert the COCO datasets to YOLO
         print("Converting " + coco_dirs[i] + " to YOLO")
-        if os.path.exists( yolo_dirs[i]):
+        if os.path.exists(yolo_dirs[i]):
             raise FileExistsError(f'convert_coco method will increment the save_dir path if save directory already exists and this isnt desirable.'
                                   f'Delete the directory before continuing: {yolo_dirs[i]}')
         convert_coco(coco_dirs[i], yolo_dirs[i], use_segments=True, cls91to80=False)
@@ -679,6 +690,7 @@ def main():
         )
 
     print("Complete")
+
 
 if __name__ == "__main__":
     main()

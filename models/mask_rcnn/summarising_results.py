@@ -1,0 +1,39 @@
+import json
+import os.path
+
+import pandas as pd
+
+from utils import REPO_PATH
+
+
+def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_path: str):
+    # See explanations of metrics in readme
+
+    ap_metrics_to_output_in_table = ['segm_cls_agn_nms/AP' + c for c in ['-Viable', '-Non-Viable', '-Empty', '']]
+    mae_metrics_to_output_in_table = ['nms_maes/' + c for c in ['viable', 'non_viable', 'empty', 'total']]
+
+    with open(metrics_json_path, 'r') as f:
+        lines = f.read().splitlines()
+        last_line = lines[-1]
+    line_dict = json.loads(last_line)
+    print(line_dict)
+
+    ap_scores = [line_dict[k] for k in ap_metrics_to_output_in_table]
+    mae_scores = [line_dict[k] for k in mae_metrics_to_output_in_table]
+
+    out_df = pd.DataFrame([ap_scores, mae_scores]).T
+    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Total']
+    out_df.columns = ['AP', 'MAE']
+
+    summary_df = pd.read_csv(test_dataset_summary_path, index_col=0)
+    out_df['Mean actual count per image'] = [summary_df.loc['mean', c] for c in ['viable', 'nonviable', 'empty', 'total']]
+    out_df = out_df.round(2)
+    out_df.to_csv(metrics_json_path.replace('.json', '_readable_summary.csv'))
+
+
+
+
+if __name__ == '__main__':
+    make_tables_from_results_json(os.path.join(REPO_PATH, 'model_weights', 'final_tz_segmentor', 'metrics.json'),
+                                  os.path.join(REPO_PATH, 'datasets', 'dataset1', 'seed_stats', 'post_quality_check', 'model_data',
+                                               'test_stats_summary.csv'))
