@@ -485,8 +485,12 @@ def combine_train_and_val(train_path, val_path, output_path):
 
 def main():
     # Reorganise directories and datasets
+    # The important output from CVAT (the post-qc data) which is the input for here
+    # is 'TZSegmenting/datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json'
+    # The important data for training, validation, and testing is in dataset1/coco_format/post_quality_check/model_data
+    # The pre-qc data exported from CVAT is in 5 parts under dataset1/coco_format/pre_quality_check/raw_data/base_dataset
 
-    # Currently final data is in T drive, but it may be moved at some point
+    # Other than here, some of this data is archived on the T drive, but it may be moved at some point
     # OrchidAnnotationProject_COCO/instances_default.json gives 'TZSegmenting/datasets/dataset1/coco_format/post_quality_check/raw_data/all_post_qc_data.json'
     # OrchidAnnotationProject_COCO/images(?) gives TZSegmenting/datasets/dataset1/all_images
     # CVAT_EXPORTS/pre_QA_annotations give some of the pre quality checked annotations but there may be issues with the duplicates.

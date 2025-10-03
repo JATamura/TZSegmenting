@@ -12,7 +12,7 @@ from ultralytics import YOLO
 from misc.evaluate import format_gt, evaluate_segmentations
 from detectron2.structures import Instances, Boxes
 from detectron2.evaluation.coco_evaluation import instances_to_coco_json, COCOEvaluator
-from models.mask_rcnn.configure_parameters import build_config
+from model_training_and_evaluation_methods.mask_rcnn.configure_parameters import build_config
 
 def yolo_to_coco_evaluation(model, cls_agnostic=True):
 

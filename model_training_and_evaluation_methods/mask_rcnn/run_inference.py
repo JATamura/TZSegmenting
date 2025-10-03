@@ -11,7 +11,7 @@ from torchvision.ops import nms
 from detectron2.engine import DefaultPredictor
 from detectron2.structures import Instances
 from detectron2.utils.visualizer import Visualizer, ColorMode
-from models.mask_rcnn.configure_parameters import register_seeds
+from model_training_and_evaluation_methods.mask_rcnn.configure_parameters import register_seeds
 
 
 def mask_nms(masks, scores, nms_threshold=0.5):

@@ -36,7 +36,7 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
     # AP indicates model across in both segmenting and classifying object instances.
     # This is a difficult metric to interpret, but is the focus for improving and comparing models.
     # As a reference, on COCO test-dev, the winners of the COCO 2015 and 2016 segmentation challenges achieved AP=24.6 and 29.2 repespectively.
-    # While a version of Mask R-CNN achieed 37.1 in 2017 \cite{he_mask_2017}
+    # While a version of Mask R-CNN achieved 37.1 in 2017 \cite{he_mask_2017}
 
     # Furthermore, we provide metrics to indicate how this translates to the actual seed counts. (MAE).
     # When compared to the counts in the underlying population, this provides a useful measure of the average under and over counting of seeds.

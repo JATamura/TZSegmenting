@@ -383,14 +383,14 @@ def main(pre_or_post: str):
         path_to_part = "../datasets/dataset1/coco_format/pre_quality_check/base_dataset.json"
         path_to_check_1 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_1.json"
         path_to_check_2 = "../datasets/dataset1/coco_format/pre_quality_check/analysis_duplicate_2.json"
-        output_path = "../agreement_analysis_stats/pre_quality_check"
+        output_path = "pre_quality_check"
 
     if pre_or_post == 'post':
         # # Paths to post-quality checked datasets and corresponding duplicates
         path_to_part = "../datasets/dataset1/coco_format/post_quality_check/base_dataset.json"
         path_to_check_1 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_1.json"
         path_to_check_2 = "../datasets/dataset1/coco_format/post_quality_check/analysis_duplicate_2.json"
-        output_path = "../agreement_analysis_stats/post_quality_check"
+        output_path = "post_quality_check"
 
     with open(path_to_part, 'r') as file:
         part = json.load(file)

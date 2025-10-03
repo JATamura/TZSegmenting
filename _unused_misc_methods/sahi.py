@@ -6,7 +6,7 @@ from detectron2.config import get_cfg
 from detectron2.engine import DefaultPredictor
 from supervision import OverlapFilter
 from torchvision.ops import nms
-from models.mask_rcnn.configure_parameters import register_seeds
+from model_training_and_evaluation_methods.mask_rcnn.configure_parameters import register_seeds
 
 
 def main():
