@@ -19,8 +19,8 @@ The final model, developed using the detectron2 framework, is based on the Casca
 data and evaluated on the test set.
 We hope to release full details of the development process in a publication soon.
 
-The final trained model is publicly available on [HuggingFace](https://huggingface.co/TZProject/final_tz_segmentor), along with
-an [app](https://huggingface.co/spaces/TZProject/OrchAId) for uploading images and running the model.
+The final trained model is publicly available on [HuggingFace](https://huggingface.co/TZTestAnalysis/final_tz_segmentor), along with
+an [app](https://huggingface.co/spaces/TZTestAnalysis/OrchAId) for uploading images and running the model.
 
 #### Dataset
 
