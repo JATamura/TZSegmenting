@@ -4,9 +4,9 @@
 "('Viable',)",520
 "('Empty', 'Non-Viable')",2830
 "('Viable', 'Non-Viable')",1338
-"('Empty', 'Viable')",2
+"('Viable', 'Empty')",2
 "('Undetected', 'Non-Viable')",1808
-"('Empty', 'Undetected')",2254
+"('Undetected', 'Empty')",2254
 "('Undetected',)",803
 "('Viable', 'Undetected')",14
 Total,37479

@@ -343,9 +343,11 @@ def compute_krippendorff(annotations, num_annotators, categories, count_undetect
     return categories_given, k_alpha
 
 
-def compute_randolph(annotations, num_annotators, count_undetected=True, method='uniform'):
+def _compute_randolph(annotations, num_annotators, count_undetected=True, method='fleiss'):
     """
     Computes Randolph's Kappa for a set of annotations. This can be changed to Fleiss' Kappa by changing the 'method' parameter.
+
+    The percentage agreement we use + fleiss' or kripendorff provide better overall agreement metrics.
     :param      annotations: (list) 2D array with the inner lists being the annotations from different COCO datasets.
     :param      num_annotators: (int) Number of annotators per object.
     :param      count_undetected: (bool) If True, include the undetected objects and assign them the category of 0 (the rest of the categories must start from 1).
@@ -353,6 +355,8 @@ def compute_randolph(annotations, num_annotators, count_undetected=True, method=
     :return:    annotators: (list) 2D array with each array being the categories given by each annotator.
     :return:    f_kappa: (float) Randolph's Kappa metric.
     """
+    raise NotImplementedError(
+        "Using 'uniform' distribution doesn't make a huge amount of sense as it is accounting for probablity of chance agreement while miscalculating chance agreement.")
     all_objects = []
     for a in annotations:
         all_objects.extend(a)
@@ -476,10 +480,10 @@ def main(pre_or_post: str):
             stats["krippendorff_with_undetected"] = kd[1]
             kd = compute_krippendorff(validation, 3, [1, 2, 3], count_undetected=False)
             stats["krippendorff_without_undetected"] = kd[1]
-            un = compute_randolph(validation, 3, count_undetected=True)
-            stats["uniform_with_undetected"] = un[1]
-            un = compute_randolph(validation, 3, count_undetected=False)
-            stats["uniform_without_undetected"] = un[1]
+            # un = compute_randolph(validation, 3, count_undetected=True)
+            # stats["uniform_with_undetected"] = un[1]
+            # un = compute_randolph(validation, 3, count_undetected=False)
+            # stats["uniform_without_undetected"] = un[1]
             p = compute_percent_agreement(
                 create_agreement_matrix(validation, 3, count_undetected=True, cls_agnostic=True), 3)
             stats["percentage_agreement_with_undetected"] = p
@@ -495,8 +499,8 @@ def main(pre_or_post: str):
             len(all_seed_validations[2]),
             compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=True)[1],
             compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=False)[1],
-            compute_randolph(all_seed_validations, 3, count_undetected=True)[1],
-            compute_randolph(all_seed_validations, 3, count_undetected=False)[1],
+            # compute_randolph(all_seed_validations, 3, count_undetected=True)[1],
+            # compute_randolph(all_seed_validations, 3, count_undetected=False)[1],
             compute_percent_agreement(
                 create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True), 3),
             compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=False), 3)
