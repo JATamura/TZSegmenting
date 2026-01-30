@@ -52,9 +52,7 @@ compared to 94.35 non-viable seeds per image).
 
 ### Acknowledgements
 
-The OrchAId TZ viability dataset was developed by the Royal Botanic Gardens, Kew, Silo National des Graines Forestieres, Madagascar, the Ministry of
-Agriculture, Lands, Housing and Environment, Monsterrat, Instituto de Investigação Agrária de Moçambique, Mozambique, Departmento de Recursos
-Naturales y Ambientales, Puerto Rico & the National Parks Trust of the Virgin Islands.
+The OrchAId TZ project was developed by the Royal Botanic Gardens, Kew, Atlanta Botanical Gardens and Badan Riset dan Inovasi Nasional (BRIN). We would like to thank Silo National des Graines Forestieres (SNGF) Madagascar; The Ministry of Agriculture, Lands, Housing & Environment Montserrat; Instituto de Investigação Agrária de Moçambique (IIAM) Mozambique; Departmento de Recursos Naturales y Ambientales, Puerto Rico; and the British Virgin Islands National Parks Trust for allowing us to use seeds they collected for this project. This project is supported by Bloomberg Philanthropies.
 
 The developers acknowledge Research Computing at the James Hutton Institute for providing computational resources and technical support for the 'UK’s
 Crop Diversity Bioinformatics HPC' (BBSRC grants BB/S019669/1 and BB/X019683/1), use of which has contributed to the development of the model used in
