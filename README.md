@@ -21,6 +21,7 @@ We hope to release full details of the development process in a publication soon
 
 The final trained model is publicly available on [HuggingFace](https://huggingface.co/TZTestAnalysis/final_tz_segmentor), along with
 an [app](https://huggingface.co/spaces/TZTestAnalysis/OrchAId) for uploading images and running the model.
+A [protocol](https://pgomba.github.io/orchid_protocol/) is provided describing a replicable system to photograph stained orchid seeds for this model.
 
 #### Dataset
 
@@ -46,13 +47,18 @@ while an early version of Mask R-CNN achieved 37.1 in
 We also calculated mean absolute error (the absolute counting error, averaged across images) for the models in order to provide an indication of the
 number of over or undercounted seeds that one may expect from the model on each image. We can see that in the test set there is an average of
 116.9 seeds per image, and the model on average over or under counts
-seeds in total by 5.7 (this is class agnostic). We distinguish the over and undercounting associated with each class as well. As a proportion of the total number we see that
+seeds in total by 5.7 (this is class agnostic). We distinguish the over and undercounting associated with each class as well. As a proportion of the
+total number we see that
 viable seeds have the most error (MAE = 1.1 compared to 4.9 viable seeds per image), while non-viable seeds have a relatively small error (MAE = 6.23
 compared to 94.35 non-viable seeds per image).
 
 ### Acknowledgements
 
-The OrchAId TZ project was developed by the Royal Botanic Gardens, Kew, Atlanta Botanical Gardens and Badan Riset dan Inovasi Nasional (BRIN). We would like to thank Silo National des Graines Forestieres (SNGF) Madagascar; The Ministry of Agriculture, Lands, Housing & Environment Montserrat; Instituto de Investigação Agrária de Moçambique (IIAM) Mozambique; Departmento de Recursos Naturales y Ambientales, Puerto Rico; and the British Virgin Islands National Parks Trust for allowing us to use seeds they collected for this project. This project is supported by Bloomberg Philanthropies.
+The OrchAId TZ project was developed by the Royal Botanic Gardens, Kew, Atlanta Botanical Gardens and Badan Riset dan Inovasi Nasional (BRIN). We
+would like to thank Silo National des Graines Forestieres (SNGF) Madagascar; The Ministry of Agriculture, Lands, Housing & Environment Montserrat;
+Instituto de Investigação Agrária de Moçambique (IIAM) Mozambique; Departmento de Recursos Naturales y Ambientales, Puerto Rico; and the British
+Virgin Islands National Parks Trust for allowing us to use seeds they collected for this project. This project is supported by Bloomberg
+Philanthropies.
 
 The developers acknowledge Research Computing at the James Hutton Institute for providing computational resources and technical support for the 'UK’s
 Crop Diversity Bioinformatics HPC' (BBSRC grants BB/S019669/1 and BB/X019683/1), use of which has contributed to the development of the model used in

@@ -378,8 +378,7 @@ def _compute_randolph(annotations, num_annotators, count_undetected=True, method
         f_kappa = irr.fleiss_kappa(irr.aggregate_raters(np.array(categories_given).transpose())[0], method=method)
     return categories_given, f_kappa
 
-
-def main(pre_or_post: str):
+def get_agreement_analysis_annotations(pre_or_post: str):
     # Extract all image names and annotations needed for agreement analysis
 
     # # Paths to pre-quality checked datasets and corresponding duplicates
@@ -444,6 +443,10 @@ def main(pre_or_post: str):
     print("Annotation in check 1: " + str(annotation_counts[1]))
     print("Annotation in check 2: " + str(annotation_counts[2]))
 
+    return agreement_analysis_image_names, agreement_analysis_annotations, output_path
+
+def main(pre_or_post: str):
+    agreement_analysis_image_names, agreement_analysis_annotations, output_path = get_agreement_analysis_annotations(pre_or_post)
     # ----------------------------------------------------------------------------
 
     # Compute agreement analysis metrics for different IoU (intersection over union) thresholds
