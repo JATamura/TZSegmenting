@@ -19,7 +19,7 @@ def get_counts_for_annotator(annotator_idx: int, agreement_analysis_annotations,
     return viable_count, nonviable_count, empty_count
 
 
-def main(pre_or_post: str):
+def analyse(pre_or_post: str, test_images=None):
     switch = {
         0: 'Undetected',
         1: 'Viable',
@@ -36,10 +36,15 @@ def main(pre_or_post: str):
     empty_aes = []
     image_count = 0
     for image_name in agreement_analysis_image_names:
+
         if agreement_analysis_annotations.get(image_name) is None:
             print(image_name)
             continue
         print(image_name)
+
+        if test_images is not None and image_name not in test_images:
+            continue
+
         image_count += 1
         original_viable_count, original_nonviable_count, original_empty_count = get_counts_for_annotator(0, agreement_analysis_annotations,
                                                                                                          image_name)
@@ -88,12 +93,26 @@ def main(pre_or_post: str):
          'Mean actual count per image': [total_counts_in_final_data['viable']/image_count, total_counts_in_final_data['nonviable']/image_count,
                                          total_counts_in_final_data['empty']/image_count, total_counts_in_final_data['seeds']/image_count]},
         index=['Viable', 'Non-Viable', 'Empty', 'Seed'])
+    out_df['image_count'] = image_count
+
+    if test_images is not None:
+        filename = 'MAEs_on_test_images.csv'
+    else:
+        filename = 'MAEs.csv'
     out_df.to_csv(
-        output_path + '/MAEs.csv')
+        output_path + f'/{filename}')
+
+def main():
+    test_images = pd.read_csv('../datasets/dataset1/seed_stats/post_quality_check/model_data/test_stats.csv')['file_names'].tolist()
+
+    analyse('pre')
+    analyse('post')
+
+    analyse('pre', test_images)
+    analyse('post', test_images)
+    raise NotImplementedError(
+        'add some sanity checks e.g. that mean counts per image match summaries. And think about which images are included in this part of analysis compared to model testing.')
 
 
 if __name__ == '__main__':
-    main('pre')
-    main('post')
-    raise NotImplementedError(
-        'add some sanity checks e.g. that mean counts per image match summaries. And think about which images are included in this part of analysis compared to model testing.')
+    main()
