@@ -209,9 +209,9 @@ def main():
 
     data_loader = build_detection_test_loader(cfg, dataset_name)
     coco_evaluator = COCOEvaluator(dataset_name, max_dets_per_image=800)
-    nms_evaluator = ClsAgnNMSEvaluator(dataset_name,0.5, 800)
-    mae_evaluator = ClassCountEvaluator(dataset_name, 0.5, 800)
-    seed_seg_evaluator = SeedSegmentationEvaluator(dataset_name, 0.5, 800)
+    nms_evaluator = ClsAgnNMSEvaluator(dataset_name,0.7, 800)
+    mae_evaluator = ClassCountEvaluator(dataset_name, 0.7, 800)
+    seed_seg_evaluator = SeedSegmentationEvaluator(dataset_name, 0.7, 800)
 
     print("Running evaluation")
     results = inference_on_dataset(model, data_loader,
