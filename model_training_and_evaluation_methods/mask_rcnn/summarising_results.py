@@ -1,6 +1,7 @@
 import json
 import os.path
 
+import numpy as np
 import pandas as pd
 
 from utils import REPO_PATH
@@ -41,9 +42,6 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
     # Furthermore, we provide metrics to indicate how this translates to the actual seed counts. (MAE).
     # When compared to the counts in the underlying population, this provides a useful measure of the average under and over counting of seeds.
 
-    ap_metrics_to_output_in_table = ['segm_cls_agn_nms/AP' + c for c in ['-Viable', '-Non-Viable', '-Empty', '']]
-    mae_metrics_to_output_in_table = ['nms_maes/' + c for c in ['viable', 'non_viable', 'empty', 'total']]
-
     with open(metrics_json_path, 'r') as f:
         data = json.load(f)
 
@@ -51,12 +49,13 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
     mae_scores = [data['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
 
     out_df = pd.DataFrame([ap_scores, mae_scores]).T
-    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Seed class']
+    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Seed class' ]
     out_df.columns = ['AP', 'MAE']
 
     summary_df = pd.read_csv(test_dataset_summary_path, index_col=0)
     out_df['Mean actual count per image'] = [summary_df.loc['mean', c] for c in ['viable', 'nonviable', 'empty', 'total']]
     out_df = out_df.round(2)
+    out_df.loc['Overall (Avg across classes)'] = [round(data['segm_cls_agn_nms']['AP'],2), 'Not calculated', None]
     out_df.to_csv(metrics_json_path.replace('.json', '_readable_summary.csv'))
 
 
