@@ -283,7 +283,7 @@ MODEL:
     NAME: SemSegFPNHead
     NORM: GN
     NUM_CLASSES: 54
-  WEIGHTS: model_weights\final_tz_segmentor\model_0004599.pth
+  WEIGHTS: model_weights\final_tz_segmentor\final_model_weights.pth
 OUTPUT_DIR: model_weights\final_tz_segmentor
 SEED: -1
 SOLVER:
