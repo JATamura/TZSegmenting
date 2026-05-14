@@ -190,14 +190,7 @@ def main():
 
     config_path = "model_weights/final_tz_segmentor/config.yaml"
 
-    param_dict = {
-        "cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST": 0.5,
-        "cfg.MODEL.RPN.NMS_THRESH": 0.5,
-        "cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST": 0.05,
-        "cfg.TEST.DETECTIONS_PER_IMAGE": 800,
-        "cfg.INPUT.MIN_SIZE_TEST": 1200,
-        "cfg.INPUT.MAX_SIZE_TEST": 1200,
-    }
+    param_dict = {}
     print("Getting model weights")
 
     cfg = get_cfg()
@@ -215,9 +208,9 @@ def main():
 
     data_loader = build_detection_test_loader(cfg, dataset_name)
     coco_evaluator = COCOEvaluator(dataset_name, max_dets_per_image=800)
-    nms_evaluator = ClsAgnNMSEvaluator(dataset_name,0.7, 800)
-    mae_evaluator = ClassCountEvaluator(dataset_name, 0.7, 800)
-    seed_seg_evaluator = SeedSegmentationEvaluator(dataset_name, 0.7, 800)
+    nms_evaluator = ClsAgnNMSEvaluator(dataset_name,0.5, 800)
+    mae_evaluator = ClassCountEvaluator(dataset_name, 0.5, 800)
+    seed_seg_evaluator = SeedSegmentationEvaluator(dataset_name, 0.5, 800)
 
     print("Running evaluation")
     results = inference_on_dataset(model, data_loader,
