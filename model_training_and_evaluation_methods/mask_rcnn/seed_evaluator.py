@@ -1,5 +1,6 @@
 # seed_evaluator has methods for adding more evaluation metrics
-
+import json
+import os
 import numpy as np
 import torch
 from torch import Tensor
@@ -11,6 +12,8 @@ from detectron2.evaluation import DatasetEvaluators, COCOEvaluator, inference_on
 from detectron2.data import build_detection_test_loader
 from detectron2.evaluation.coco_evaluation import instances_to_coco_json
 from detectron2.structures import Instances
+from utils import REPO_PATH
+
 
 class ClsAgnNMSEvaluator(COCOEvaluator):
     def __init__(self, dataset_name, cls_agnostic_nms, max_dets_per_image, output_dir=None):
@@ -182,21 +185,19 @@ class ClassCountEvaluator(COCOEvaluator):
 def main():
 
     from configure_parameters import register_seeds
-    image_path = "../../datasets/dataset1/all_images"
-    train = "../../datasets/dataset1/coco_format/post_quality_check/model_data/train.json"
-    test = "../../datasets/dataset1/coco_format/post_quality_check/model_data/test.json"
-    val = "../../datasets/dataset1/coco_format/post_quality_check/model_data/val.json"
+    image_path = os.path.join(REPO_PATH, "datasets/dataset1/all_images")
+    train = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/train.json")
+    test = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/test.json")
+    val = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/val.json")
     register_seeds(image_path, train, test, val)
 
+    os.chdir(REPO_PATH)
     config_path = "model_weights/final_tz_segmentor/config.yaml"
 
-    param_dict = {}
     print("Getting model weights")
 
     cfg = get_cfg()
     cfg.merge_from_file(config_path)
-    for param, value in param_dict.items():
-        exec(param + " = " + str(value))
     if not torch.cuda.is_available():
         cfg.MODEL.DEVICE = "cpu"
     else:
@@ -221,6 +222,10 @@ def main():
                                        mae_evaluator,
                                    ]))
     print(results)
+
+    with open("model_weights/final_tz_segmentor/final_evaluation_metrics.json", "w") as f:
+        json.dump(results, f, indent=4)
+
 
 if __name__ == "__main__":
     main()
