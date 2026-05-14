@@ -1,3 +1,6 @@
+import json
+import os
+
 import pandas as pd
 
 from agreement_analysis.analysis import get_agreement_analysis_annotations, annotations_to_polygons, compare_annotations_3, compare_annotations_2
@@ -35,6 +38,8 @@ def analyse(pre_or_post: str, test_images=None):
     nonviable_aes = []
     empty_aes = []
     image_count = 0
+
+    images_in_analysis_and_test_set = []
     for image_name in agreement_analysis_image_names:
 
         if agreement_analysis_annotations.get(image_name) is None:
@@ -44,7 +49,7 @@ def analyse(pre_or_post: str, test_images=None):
 
         if test_images is not None and image_name not in test_images:
             continue
-
+        images_in_analysis_and_test_set.append(image_name)
         image_count += 1
         original_viable_count, original_nonviable_count, original_empty_count = get_counts_for_annotator(0, agreement_analysis_annotations,
                                                                                                          image_name)
@@ -90,17 +95,28 @@ def analyse(pre_or_post: str, test_images=None):
 
     out_df = pd.DataFrame(
         {'MAE': [viable_mae, nonviable_mae, empty_mae, seed_mae],
-         'Mean actual count per image': [total_counts_in_final_data['viable']/image_count, total_counts_in_final_data['nonviable']/image_count,
-                                         total_counts_in_final_data['empty']/image_count, total_counts_in_final_data['seeds']/image_count]},
+         'Mean actual count per image': [total_counts_in_final_data['viable'] / image_count, total_counts_in_final_data['nonviable'] / image_count,
+                                         total_counts_in_final_data['empty'] / image_count, total_counts_in_final_data['seeds'] / image_count]},
         index=['Viable', 'Non-Viable', 'Empty', 'Seed'])
-    out_df['image_count'] = image_count
 
     if test_images is not None:
         filename = 'MAEs_on_test_images.csv'
+        print(images_in_analysis_and_test_set)
+
+        with open(os.path.join('post_quality_check', 'evaluation_metrics_on_images_in_analysis_and_test_set.json'), 'r') as f:
+            data = json.load(f)
+
+        mae_scores = [data['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
+        out_df['Model_MAE_on_analysis_images'] = mae_scores
+        out_df = out_df[['MAE', 'Model_MAE_on_analysis_images', 'Mean actual count per image']]
     else:
         filename = 'MAEs.csv'
+
+    out_df['image_count'] = image_count
+
     out_df.to_csv(
         output_path + f'/{filename}')
+
 
 def main():
     test_images = pd.read_csv('../datasets/dataset1/seed_stats/post_quality_check/model_data/test_stats.csv')['file_names'].tolist()
@@ -110,8 +126,6 @@ def main():
 
     analyse('pre', test_images)
     analyse('post', test_images)
-    raise NotImplementedError(
-        'add some sanity checks e.g. that mean counts per image match summaries. And think about which images are included in this part of analysis compared to model testing.')
 
 
 if __name__ == '__main__':
