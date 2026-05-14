@@ -45,16 +45,13 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
     mae_metrics_to_output_in_table = ['nms_maes/' + c for c in ['viable', 'non_viable', 'empty', 'total']]
 
     with open(metrics_json_path, 'r') as f:
-        lines = f.read().splitlines()
-        last_line = lines[-1]
-    line_dict = json.loads(last_line)
-    print(line_dict)
+        data = json.load(f)
 
-    ap_scores = [line_dict[k] for k in ap_metrics_to_output_in_table]
-    mae_scores = [line_dict[k] for k in mae_metrics_to_output_in_table]
+    ap_scores = [data['segm_cls_agn_nms']['AP-'+c] for c in ['Viable', 'Non-Viable', 'Empty']] + [data['segm_seed_class']['AP']]
+    mae_scores = [data['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
 
     out_df = pd.DataFrame([ap_scores, mae_scores]).T
-    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Total']
+    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Seed class']
     out_df.columns = ['AP', 'MAE']
 
     summary_df = pd.read_csv(test_dataset_summary_path, index_col=0)
@@ -66,6 +63,6 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
 
 
 if __name__ == '__main__':
-    make_tables_from_results_json(os.path.join(REPO_PATH, 'model_weights', 'final_tz_segmentor', 'metrics.json'),
+    make_tables_from_results_json(os.path.join(REPO_PATH, 'model_weights', 'final_tz_segmentor', 'final_evaluation_metrics.json'),
                                   os.path.join(REPO_PATH, 'datasets', 'dataset1', 'seed_stats', 'post_quality_check', 'model_data',
                                                'test_stats_summary.csv'))
