@@ -35,11 +35,12 @@ that we hope to provide a more detailed analysis of in a publication soon.
 #### Results
 
 A summary of model performance on the final test set can be found in this repository
-at [metrics_readable_summary.csv](model_weights/final_tz_segmentor/metrics_readable_summary.csv).
+at [final_evaluation_metrics_readable_summary.csv](model_weights/final_tz_segmentor/final_evaluation_metrics_readable_summary.csv), 
+with full metrics given in [final_evaluation_metrics.json](model_weights/final_tz_segmentor/final_evaluation_metrics.json).
 
 To briefly summarise these results, first we focus on the AP score. AP indicates model performance in both segmenting and classifying object
-instances. This is a difficult metric to interpret, but is the focus for improving and comparing models. Our model achieves an AP of 31.61 in the
-final evaluation.
+instances. This is a difficult metric to interpret, but is the focus for improving and comparing models. Our model achieves an AP of 29.55 in the
+final evaluation. When evaluated on just the ability to count seeds (i.e. agnostic to classes in the evaluation), the model achieves AP=55.92.
 As a reference, on the COCO test-dev dataset, the winners of the COCO 2015 and 2016 segmentation challenges achieved AP=24.6 and 29.2, respectively;
 while an early version of Mask R-CNN achieved 37.1 in
 2017 [(He et al.)](https://openaccess.thecvf.com/content_iccv_2017/html/He_Mask_R-CNN_ICCV_2017_paper.html).
@@ -47,9 +48,9 @@ while an early version of Mask R-CNN achieved 37.1 in
 We also calculated mean absolute error (the absolute counting error, averaged across images) for the models in order to provide an indication of the
 number of over or undercounted seeds that one may expect from the model on each image. We can see that in the test set there is an average of
 116.9 seeds per image, and the model on average over or under counts
-seeds in total by 5.7 (this is class agnostic). We distinguish the over and undercounting associated with each class as well. As a proportion of the
+seeds in total by 11.42 (this is class agnostic). We distinguish the over and undercounting associated with each class as well. As a proportion of the
 total number we see that
-viable seeds have the most error (MAE = 1.1 compared to 4.9 viable seeds per image), while non-viable seeds have a relatively small error (MAE = 6.23
+viable seeds have the most error (MAE = 3.56 compared to 4.91 viable seeds per image), while non-viable seeds have a relatively small error (MAE = 11.53
 compared to 94.35 non-viable seeds per image).
 
 ### Acknowledgements
