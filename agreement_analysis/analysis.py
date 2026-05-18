@@ -292,6 +292,10 @@ def create_agreement_matrix(compared_annotation_lists, num_annotators, count_und
 def compute_percent_agreement(agreement_matrix, num_annotators):
     """
     Compute the unweighted percent agreement across annotators.
+
+    Calculated as in Table 2 of https://pmc.ncbi.nlm.nih.gov/articles/PMC3900052/
+    Assumes majority are correct.
+
     :param      agreement_matrix: (list dict) List of dictionaries with each entry corresponding to each unique object annotated in each image. The key of each dictionary is the annotator number and the key is the COCO annotation given by that annotator to that object. These can be derived from the compare_annotations_2 and _3 functions.
     :param      num_annotators: (int) Number of annotators per object.
     :return:    percent_agreement: (float) The percent agreement between annotators.
@@ -300,8 +304,9 @@ def compute_percent_agreement(agreement_matrix, num_annotators):
     for annotation_set in agreement_matrix:
         # Count the maximum number of matching categories and divide by the number of annotators
         if annotation_set:
-            all_object_categories.append(
-                annotation_set.count(max(annotation_set, key=annotation_set.count)) / num_annotators)
+            majority_category = max(annotation_set, key=annotation_set.count)
+            percent_agreement_for_annotation = annotation_set.count(majority_category) / num_annotators
+            all_object_categories.append(percent_agreement_for_annotation)
 
     percent_agreement = np.mean(all_object_categories)
     return percent_agreement
@@ -378,6 +383,7 @@ def _compute_randolph(annotations, num_annotators, count_undetected=True, method
         f_kappa = irr.fleiss_kappa(irr.aggregate_raters(np.array(categories_given).transpose())[0], method=method)
     return categories_given, f_kappa
 
+
 def get_agreement_analysis_annotations(pre_or_post: str):
     # Extract all image names and annotations needed for agreement analysis
 
@@ -445,6 +451,7 @@ def get_agreement_analysis_annotations(pre_or_post: str):
 
     return agreement_analysis_image_names, agreement_analysis_annotations, output_path
 
+
 def main(pre_or_post: str):
     agreement_analysis_image_names, agreement_analysis_annotations, output_path = get_agreement_analysis_annotations(pre_or_post)
     # ----------------------------------------------------------------------------
@@ -454,7 +461,7 @@ def main(pre_or_post: str):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
-    # he threshold for determining if an annotation was for the same seed or not was initially set to 0.5 but later changed to 0.3 as there
+    # The threshold for determining if an annotation was for the same seed or not was initially set to 0.5 but later changed to 0.3 as there
     # was too much variance in how people annotated (even after quality checking) that even 0.5 was too high of a threshold to consider
     # different annotations made as the same seed.
     ious = [0.3]
@@ -489,9 +496,9 @@ def main(pre_or_post: str):
             # stats["uniform_without_undetected"] = un[1]
             p = compute_percent_agreement(
                 create_agreement_matrix(validation, 3, count_undetected=True, cls_agnostic=True), 3)
-            stats["percentage_agreement_with_undetected"] = p
+            stats["class_agnostic_percentage_agreement_with_undetected"] = p  # Get a measure of pure detection agreement agnostic of class
             p = compute_percent_agreement(create_agreement_matrix(validation, 3, count_undetected=False), 3)
-            stats["percentage_agreement_without_undetected"] = p
+            stats["percentage_agreement_without_undetected"] = p  # And a measure of pure classification agreement agnostic of detection
             agreement[image_name] = stats
 
         agreement = pd.DataFrame(agreement)
@@ -504,8 +511,7 @@ def main(pre_or_post: str):
             compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=False)[1],
             # compute_randolph(all_seed_validations, 3, count_undetected=True)[1],
             # compute_randolph(all_seed_validations, 3, count_undetected=False)[1],
-            compute_percent_agreement(
-                create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True), 3),
+            compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True), 3),
             compute_percent_agreement(create_agreement_matrix(all_seed_validations, 3, count_undetected=False), 3)
         ]
         print(agreement.loc[:, ["per_img_mean", "dataset_total"]])
