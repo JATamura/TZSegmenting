@@ -285,12 +285,12 @@ def create_agreement_matrix(compared_annotation_lists, count_undetected=True, cl
                     else:
                         object_categories.append(o[a]["category_id"])
 
-        if len(object_categories) > 1:
+        if len(object_categories) > 0:
             agreement_matrix.append(object_categories)
     return agreement_matrix
 
 
-def compute_percent_agreement(agreement_matrix, num_annotators):
+def compute_percent_agreement(agreement_matrix):
     """
     Compute the unweighted percent agreement across annotators.
 
@@ -298,15 +298,15 @@ def compute_percent_agreement(agreement_matrix, num_annotators):
     Assumes majority are correct.
 
     :param      agreement_matrix: (list dict) List of dictionaries with each entry corresponding to each unique object annotated in each image. The key of each dictionary is the annotator number and the key is the COCO annotation given by that annotator to that object. These can be derived from the compare_annotations_2 and _3 functions.
-    :param      num_annotators: (int) Number of annotators per object.
     :return:    percent_agreement: (float) The percent agreement between annotators.
     """
+
     all_object_categories = []
     for annotation_set in agreement_matrix:
         # Count the maximum number of matching categories and divide by the number of annotators
-        if annotation_set:
+        if annotation_set and len(annotation_set) > 1:
             majority_category = max(annotation_set, key=annotation_set.count)
-            percent_agreement_for_annotation = annotation_set.count(majority_category) / num_annotators
+            percent_agreement_for_annotation = annotation_set.count(majority_category) / len(annotation_set)
             all_object_categories.append(percent_agreement_for_annotation)
 
     percent_agreement = np.mean(all_object_categories)
@@ -521,10 +521,10 @@ def main(pre_or_post: str):
             detection_agreement_matrix = create_agreement_matrix(validation, count_undetected=True, cls_agnostic=True)
             classification_agreement_matrix = create_agreement_matrix(validation, count_undetected=False)
 
-            stats["pure_detection_percent_agreement"] = compute_percent_agreement(detection_agreement_matrix,
-                                                                                  3)  # Get a measure of pure detection agreement agnostic of class
-            stats["pure_classification_percent_agreement"] = compute_percent_agreement(classification_agreement_matrix,
-                                                                                       3)  # And a measure of pure classification agreement agnostic of detection
+            stats["pure_detection_percent_agreement"] = compute_percent_agreement(
+                detection_agreement_matrix)  # Get a measure of pure detection agreement agnostic of class
+            stats["pure_classification_percent_agreement"] = compute_percent_agreement(
+                classification_agreement_matrix)  # And a measure of pure classification agreement agnostic of detection
             stats["pure_detection_probability_of_agreement"] = compute_probability_of_agreement(detection_agreement_matrix)
             stats["pure_classification_probability_of_agreement"] = compute_probability_of_agreement(classification_agreement_matrix)
 
@@ -543,8 +543,8 @@ def main(pre_or_post: str):
             compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=False)[1],
             # compute_randolph(all_seed_validations, 3, count_undetected=True)[1],
             # compute_randolph(all_seed_validations, 3, count_undetected=False)[1],
-            compute_percent_agreement(all_seed_detection_agreement_matrix, 3),
-            compute_percent_agreement(all_seed_classification_agreement_matrix, 3),
+            compute_percent_agreement(all_seed_detection_agreement_matrix),
+            compute_percent_agreement(all_seed_classification_agreement_matrix),
             compute_probability_of_agreement(all_seed_detection_agreement_matrix),
             compute_probability_of_agreement(all_seed_classification_agreement_matrix)
         ]
