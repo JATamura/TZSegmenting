@@ -333,13 +333,13 @@ def compute_probability_of_agreement(agreement_matrix):
     return agreement_probability
 
 
-def compute_krippendorff(annotations, num_annotators, categories, count_undetected=True):
+def compute_krippendorff(annotations, num_annotators, categories):
     """
     Computes Krippendorff's Alpha for a set of annotations.
     :param      annotations: (list) 2D array with the inner lists being the annotations from different COCO datasets.
     :param      num_annotators: (int) Number of annotators per object.
     :param      categories: (list) Categories that an object can be assigned.
-    :param      count_undetected: (bool) If True, include the undetected objects and assign them the category of 0 (the rest of the categories must start from 1).
+    :param      class_agnostic_for_detection: (bool) If True, just assess detection of seeds independent of class.
     :return:    annotators: (list) 2D array with each array being the categories given by each annotator.
     :return:    k_alpha: (float) Krippendorff's Alpha metric.
     """
@@ -348,27 +348,16 @@ def compute_krippendorff(annotations, num_annotators, categories, count_undetect
         all_objects.extend(a)
     categories_given = [[] for a in range(num_annotators)]
     for obj in all_objects:
-        if count_undetected:
-            for i in range(num_annotators):
-                if obj["a_" + str(i + 1)] is not None:
-                    categories_given[i].append(obj["a_" + str(i + 1)]["category_id"])
-                else:
-                    categories_given[i].append(0)
-        else:
-            for i in range(num_annotators):
-                if obj["a_" + str(i + 1)] is not None:
-                    categories_given[i].append(obj["a_" + str(i + 1)]["category_id"])
-                else:
-                    categories_given[i].append(np.nan)
+        for i in range(num_annotators):
+            if obj["a_" + str(i + 1)] is not None:
+                categories_given[i].append(obj["a_" + str(i + 1)]["category_id"])
+            else:
+                categories_given[i].append(np.nan)
     if all(category == categories_given[0] for category in categories_given):
         k_alpha = 1
     else:
-        if count_undetected:
-            k_alpha = krippendorff.alpha(categories_given, value_domain=categories.insert(0, 0),
-                                         level_of_measurement="nominal")
-        else:
-            k_alpha = krippendorff.alpha(categories_given, value_domain=categories, level_of_measurement="nominal")
-    return categories_given, k_alpha
+        k_alpha = krippendorff.alpha(categories_given, value_domain=categories, level_of_measurement="nominal")
+    return k_alpha
 
 
 def _compute_randolph(annotations, num_annotators, count_undetected=True, method='fleiss'):
@@ -509,10 +498,7 @@ def main(pre_or_post: str):
                 all_seed_validations[i] += validation[i]
             stats = {"same_label": len(validation[0]), "different_label": len(validation[1]),
                      "not_labeled": len(validation[2])}
-            kd = compute_krippendorff(validation, 3, [1, 2, 3], count_undetected=True)
-            stats["krippendorff_with_undetected"] = kd[1]
-            kd = compute_krippendorff(validation, 3, [1, 2, 3], count_undetected=False)
-            stats["krippendorff_without_undetected"] = kd[1]
+            stats["classification_krippendorff"] = compute_krippendorff(validation, 3, [1, 2, 3])
             # un = compute_randolph(validation, 3, count_undetected=True)
             # stats["uniform_with_undetected"] = un[1]
             # un = compute_randolph(validation, 3, count_undetected=False)
@@ -539,8 +525,7 @@ def main(pre_or_post: str):
             len(all_seed_validations[0]),
             len(all_seed_validations[1]),
             len(all_seed_validations[2]),
-            compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=True)[1],
-            compute_krippendorff(all_seed_validations, 3, [1, 2, 3], count_undetected=False)[1],
+            compute_krippendorff(all_seed_validations, 3, [1, 2, 3]),
             # compute_randolph(all_seed_validations, 3, count_undetected=True)[1],
             # compute_randolph(all_seed_validations, 3, count_undetected=False)[1],
             compute_percent_agreement(all_seed_detection_agreement_matrix),
@@ -570,7 +555,8 @@ def main(pre_or_post: str):
         for set_of_three in all_a_converted:
             all_combinations = list(itertools.combinations(set_of_three, 2))
             for c in all_combinations:
-                pair_agreement[tuple(set(c))] = pair_agreement.get(tuple(set(c)), 0) + 1
+                order = tuple(set(c))
+                pair_agreement[order] = pair_agreement.get(order, 0) + 1
         pair_agreement["Total"] = sum(pair_agreement.values())
         pair_agreement = pd.DataFrame(pair_agreement.values(), index=list(pair_agreement.keys()),
                                       columns=["Number of annotations"])
