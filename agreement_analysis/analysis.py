@@ -249,11 +249,10 @@ def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, 
     return same_label, different_label, undetected_label
 
 
-def create_agreement_matrix(compared_annotation_lists, num_annotators, count_undetected=True, cls_agnostic=False):
+def create_agreement_matrix(compared_annotation_lists, count_undetected=True, cls_agnostic=False):
     """
     Creates an agreement matrix used for percent agreement.
     :param      compared_annotation_lists: (list dict) List of dictionaries with each entry corresponding to each unique object annotated in each image. The key of each dictionary is the annotator number and the key is the COCO annotation given by that annotator to that object. These can be derived from the compare_annotations_2 and _3 functions.
-    :param      num_annotators: (int) Number of annotators per object.
     :param      count_undetected: (bool) If True, include the undetected objects and assign them the category of 0 (the rest of the categories must start from 1).
     :param      cls_agnostic: (bool) If True, count all objects as the same class (useful when isolating segmentation agreement from classification agreement).
     :return:    agreement_matrix: (list) 2D array with the inner list containing the category given to an object by each annotator.
@@ -268,27 +267,25 @@ def create_agreement_matrix(compared_annotation_lists, num_annotators, count_und
         object_categories = []
         # If count_detected is enabled, append 1 for each object if cls_agnostic is enabled, else append the category of each annotation. If an annotator has not annotated an object, append 0 as its category.
         if count_undetected:
-            for i in range(num_annotators):
-                if o["a_" + str(i + 1)]:
+            for a in o:
+                if o[a] is not None:
                     if cls_agnostic:
                         object_categories.append(1)
                     else:
-                        object_categories.append(o["a_" + str(i + 1)]["category_id"])
+                        object_categories.append(o[a]["category_id"])
                 else:
                     object_categories.append(0)
-        # If count_detected is enabled, only append categories if the object has been annotated by each annotator.
+        # If count_detected is enabled, only append annotated objects
         else:
-            if None not in o.values():
-                for i in range(num_annotators):
+            # if None not in o.values():
+            for a in o:
+                if o[a] is not None:
                     if cls_agnostic:
                         object_categories.append(1)
                     else:
-                        object_categories.append(o["a_" + str(i + 1)]["category_id"])
-            else:
-                # print("Object not annotated by all annotators")
-                pass
+                        object_categories.append(o[a]["category_id"])
 
-        if len(object_categories) > 0:
+        if len(object_categories) > 1:
             agreement_matrix.append(object_categories)
     return agreement_matrix
 
@@ -352,15 +349,17 @@ def compute_krippendorff(annotations, num_annotators, categories, count_undetect
     categories_given = [[] for a in range(num_annotators)]
     for obj in all_objects:
         if count_undetected:
-            for i in range(3):
+            for i in range(num_annotators):
                 if obj["a_" + str(i + 1)] is not None:
                     categories_given[i].append(obj["a_" + str(i + 1)]["category_id"])
                 else:
                     categories_given[i].append(0)
         else:
-            if None not in obj.values():
-                for i in range(3):
+            for i in range(num_annotators):
+                if obj["a_" + str(i + 1)] is not None:
                     categories_given[i].append(obj["a_" + str(i + 1)]["category_id"])
+                else:
+                    categories_given[i].append(np.nan)
     if all(category == categories_given[0] for category in categories_given):
         k_alpha = 1
     else:
@@ -519,8 +518,8 @@ def main(pre_or_post: str):
             # un = compute_randolph(validation, 3, count_undetected=False)
             # stats["uniform_without_undetected"] = un[1]
 
-            detection_agreement_matrix = create_agreement_matrix(validation, 3, count_undetected=True, cls_agnostic=True)
-            classification_agreement_matrix = create_agreement_matrix(validation, 3, count_undetected=False)
+            detection_agreement_matrix = create_agreement_matrix(validation, count_undetected=True, cls_agnostic=True)
+            classification_agreement_matrix = create_agreement_matrix(validation, count_undetected=False)
 
             stats["pure_detection_percent_agreement"] = compute_percent_agreement(detection_agreement_matrix,
                                                                                   3)  # Get a measure of pure detection agreement agnostic of class
@@ -534,8 +533,8 @@ def main(pre_or_post: str):
         agreement = pd.DataFrame(agreement)
         agreement['per_img_mean'] = agreement.mean(axis=1)
 
-        all_seed_classification_agreement_matrix = create_agreement_matrix(all_seed_validations, 3, count_undetected=False)
-        all_seed_detection_agreement_matrix = create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=True)
+        all_seed_classification_agreement_matrix = create_agreement_matrix(all_seed_validations, count_undetected=False)
+        all_seed_detection_agreement_matrix = create_agreement_matrix(all_seed_validations, count_undetected=True, cls_agnostic=True)
         agreement['dataset_total'] = [
             len(all_seed_validations[0]),
             len(all_seed_validations[1]),
@@ -552,7 +551,7 @@ def main(pre_or_post: str):
         print(agreement.loc[:, ["per_img_mean", "dataset_total"]])
         agreement.to_csv(os.path.join(output_path, "metrics_" + str(iou_thresh) + ".csv"), index=True)
 
-        all_a = create_agreement_matrix(all_seed_validations, 3, count_undetected=True, cls_agnostic=False)
+        all_a = create_agreement_matrix(all_seed_validations, count_undetected=True, cls_agnostic=False)
 
         all_a_converted = []
         for set_of_three in all_a:
