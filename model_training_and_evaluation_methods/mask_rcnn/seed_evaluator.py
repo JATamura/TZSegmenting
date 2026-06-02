@@ -262,8 +262,6 @@ def run_on_individual_test_data():
                                                                                                                           'MAE-Empty', 'MAE-Total'])
             out_df.to_csv("model_results_and_final_weights/final_tz_segmentor/test_results_on_individual_images.csv", index=False)
 
-    out_df.loc['Mean'] = out_df.mean(axis=0, numeric_only=True)
-    out_df.loc['Std'] = out_df.std(axis=0, numeric_only=True)
     out_df.to_csv("model_results_and_final_weights/final_tz_segmentor/test_results_on_individual_images.csv")
 
 

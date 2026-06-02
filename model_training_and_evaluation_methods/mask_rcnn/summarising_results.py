@@ -4,6 +4,8 @@ import os.path
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from scipy.stats import stats
+from sklearn.utils import resample
 
 from utils import REPO_PATH
 
@@ -19,7 +21,7 @@ def make_graph_from_final_training():
     copies = []
     for l in lines:
         line_dict = json.loads(l)
-        if line_dict['iteration'] ==19:
+        if line_dict['iteration'] == 19:
             copies.append(line_dict)
 
     done_iters = []
@@ -35,7 +37,7 @@ def make_graph_from_final_training():
             line_results.append(result)
         iteration = line_dict['iteration']
         if iteration in done_iters:
-           print(f'Duplicate iteration {iteration}')
+            print(f'Duplicate iteration {iteration}')
         done_iters.append(iteration)
         try:
             line_results.append(line_dict['data_time'])
@@ -45,7 +47,7 @@ def make_graph_from_final_training():
 
     # make a dataframe from metric_iteration_dict
     plot_df = pd.DataFrame(metric_iteration_dict).T
-    plot_df.columns =metrics + ['data_time']
+    plot_df.columns = metrics + ['data_time']
 
     plot_df['iteration'] = plot_df.index
     # make a seaborn plot of the total_loss
@@ -55,7 +57,8 @@ def make_graph_from_final_training():
     plt.savefig(os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor', 'training_total_loss.png'))
     print(metric_iteration_dict)
 
-def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_path: str):
+
+def make_tables_from_results_json():
     # base_/nms_ prefixes indicate outputs without/with non-max suppression
     # _raw_values indicate mean number of counts per image
     # _maes indicate mean absolute error per image
@@ -90,28 +93,65 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
     # Furthermore, we provide metrics to indicate how this translates to the actual seed counts. (MAE).
     # When compared to the counts in the underlying population, this provides a useful measure of the average under and over counting of seeds.
 
+    test_dataset_summary_path = os.path.join(REPO_PATH, 'datasets', 'dataset1', 'seed_stats', 'post_quality_check', 'model_data',
+                                             'test_stats_summary.csv')
+    metrics_json_path = os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor', 'final_evaluation_metrics.json')
+
     with open(metrics_json_path, 'r') as f:
         data = json.load(f)
 
-    ap_scores = [data['segm_cls_agn_nms']['AP-'+c] for c in ['Viable', 'Non-Viable', 'Empty']] + [data['segm_seed_class']['AP']]
+    ap_scores = [data['segm_cls_agn_nms']['AP-' + c] for c in ['Viable', 'Non-Viable', 'Empty']] + [data['segm_seed_class']['AP']]
+
+    # This is just a sanity check, should be the same as the per-image values calculated below.
     mae_scores = [data['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
 
-    out_df = pd.DataFrame([ap_scores, mae_scores]).T
-    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Seed class' ]
-    out_df.columns = ['AP', 'MAE']
+    per_img_metrics = pd.read_csv(os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor',
+                                               'test_results_on_individual_images.csv'), index_col=0)
+
+    def bootstrap_mean_ci(column):
+        values = per_img_metrics[column].tolist()
+        stats = []
+        for i in range(1000):
+            samples = resample(values)
+            stats.append(np.nanmean(samples, ))
+        # confidence intervals
+        alpha = 0.95
+        p = ((1.0 - alpha) / 2.0) * 100
+        lower = np.percentile(stats, p)
+        p = (alpha + ((1.0 - alpha) / 2.0)) * 100
+        upper = np.percentile(stats, p)
+
+        mean = np.nanmean(values)
+        return mean, lower, upper
+
+    per_img_ap_results = []
+    for metric in ['AP-Viable', 'AP-Non-Viable', 'AP-Empty', 'AP-Seed']:
+        mean, lower, upper = bootstrap_mean_ci(metric)
+        per_img_ap_results.append(f'{round(mean, 2)} ({round(lower, 2)}-{round(upper, 2)})')
+
+    per_img_mae_results = []
+    for metric in ['MAE-Viable', 'MAE-Non-Viable', 'MAE-Empty', 'MAE-Total']:
+        mean, lower, upper = bootstrap_mean_ci(metric)
+        per_img_mae_results.append(f'{round(mean, 2)} ({round(lower, 2)}-{round(upper, 2)})')
+
+    out_df = pd.DataFrame([ap_scores, per_img_ap_results, per_img_mae_results, mae_scores]).T
+    out_df.index = ['Viable', 'Non-viable', 'Empty', 'Seed class']
+    out_df.columns = ['Overall AP', 'Per-Image AP', 'Per-Image MAE', 'MAE']
 
     summary_df = pd.read_csv(test_dataset_summary_path, index_col=0)
     out_df['Mean actual count per image'] = [summary_df.loc['mean', c] for c in ['viable', 'nonviable', 'empty', 'total']]
     out_df = out_df.round(2)
-    out_df.loc['Overall (Avg across classes)'] = [round(data['segm_cls_agn_nms']['AP'],2), 'Not calculated', None]
+
+    mean_ap, lower_ap, upper_ap = bootstrap_mean_ci('AP')
+    out_df.loc['Overall (Avg across classes)'] = [round(data['segm_cls_agn_nms']['AP'], 2),
+                                                  f'{round(mean_ap, 2)} ({round(lower_ap, 2)}-{round(upper_ap, 2)})',
+                                                  'Not calculated','Not calculated', None]
     out_df.to_csv(metrics_json_path.replace('.json', '_readable_summary.csv'))
 
 
 def main():
-    # make_tables_from_results_json(os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor', 'final_evaluation_metrics.json'),
-    #                               os.path.join(REPO_PATH, 'datasets', 'dataset1', 'seed_stats', 'post_quality_check', 'model_data',
-    #                                            'test_stats_summary.csv'))
-    make_graph_from_final_training()
+    make_tables_from_results_json()
+
 
 if __name__ == '__main__':
     main()
