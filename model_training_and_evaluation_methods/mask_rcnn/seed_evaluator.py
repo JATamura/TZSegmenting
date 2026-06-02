@@ -2,6 +2,7 @@
 import json
 import os
 import numpy as np
+import pandas as pd
 import torch
 from torch import Tensor
 from torchvision.ops import nms
@@ -26,11 +27,11 @@ class ClsAgnNMSEvaluator(COCOEvaluator):
             instances = output["instances"].to(self._cpu_device)
             nms_indices = nms(instances._fields["pred_boxes"].tensor,
                               instances._fields["scores"], self.cls_agnostic_nms)
-            nms_prediction  = {'instances': Instances(image_size=instances.image_size,
-                               pred_boxes=instances.pred_boxes[nms_indices],
-                               scores=instances.scores[nms_indices],
-                               pred_classes=instances.pred_classes[nms_indices],
-                               pred_masks=instances.pred_masks[nms_indices])}
+            nms_prediction = {'instances': Instances(image_size=instances.image_size,
+                                                     pred_boxes=instances.pred_boxes[nms_indices],
+                                                     scores=instances.scores[nms_indices],
+                                                     pred_classes=instances.pred_classes[nms_indices],
+                                                     pred_masks=instances.pred_masks[nms_indices])}
 
             prediction["instances"] = instances_to_coco_json(nms_prediction["instances"], input["image_id"])
             self._predictions.append(prediction)
@@ -38,8 +39,9 @@ class ClsAgnNMSEvaluator(COCOEvaluator):
     def evaluate(self, img_ids=None):
         results = {}
         for k, v in super().evaluate().items():
-            results[k+"_cls_agn_nms"] = v
+            results[k + "_cls_agn_nms"] = v
         return results
+
 
 class SeedSegmentationEvaluator(COCOEvaluator):
     def __init__(self, dataset_name, cls_agnostic_nms, max_dets_per_image, output_dir=None):
@@ -61,11 +63,11 @@ class SeedSegmentationEvaluator(COCOEvaluator):
 
             nms_indices = nms(instances._fields["pred_boxes"].tensor,
                               instances._fields["scores"], self.cls_agnostic_nms)
-            nms_prediction  = {'instances': Instances(image_size=instances.image_size,
-                               pred_boxes=instances.pred_boxes[nms_indices],
-                               scores=instances.scores[nms_indices],
-                               pred_classes=Tensor([1 for i in instances.pred_classes[nms_indices]]),
-                               pred_masks=instances.pred_masks[nms_indices])}
+            nms_prediction = {'instances': Instances(image_size=instances.image_size,
+                                                     pred_boxes=instances.pred_boxes[nms_indices],
+                                                     scores=instances.scores[nms_indices],
+                                                     pred_classes=Tensor([1 for i in instances.pred_classes[nms_indices]]),
+                                                     pred_masks=instances.pred_masks[nms_indices])}
 
             prediction["instances"] = instances_to_coco_json(nms_prediction["instances"], input["image_id"])
             self._predictions.append(prediction)
@@ -73,8 +75,9 @@ class SeedSegmentationEvaluator(COCOEvaluator):
     def evaluate(self, img_ids=None):
         results = {}
         for k, v in super().evaluate().items():
-            results[k+"_seed_class"] = v
+            results[k + "_seed_class"] = v
         return results
+
 
 class ClassCountEvaluator(COCOEvaluator):
     def __init__(self, dataset_name, cls_agnostic_nms, max_dets_per_image, output_dir=None):
@@ -101,7 +104,7 @@ class ClassCountEvaluator(COCOEvaluator):
                 len(actual_classes)
             ])
             if self.actual[-1][1]:
-                self.actual[-1].append(self.actual[-1][0]/self.actual[-1][1])
+                self.actual[-1].append(self.actual[-1][0] / self.actual[-1][1])
             elif self.actual[-1][0]:
                 self.actual[-1].append(1)
             else:
@@ -115,7 +118,7 @@ class ClassCountEvaluator(COCOEvaluator):
                 len(predicted_classes)
             ])
             if self.pred[-1][1]:
-                self.pred[-1].append(self.pred[-1][0]/self.pred[-1][1])
+                self.pred[-1].append(self.pred[-1][0] / self.pred[-1][1])
             elif self.pred[-1][0]:
                 self.pred[-1].append(1)
             else:
@@ -137,12 +140,11 @@ class ClassCountEvaluator(COCOEvaluator):
                 len(nms_classes)
             ])
             if self.nms_pred[-1][1]:
-                self.nms_pred[-1].append(self.nms_pred[-1][0]/self.nms_pred[-1][1])
+                self.nms_pred[-1].append(self.nms_pred[-1][0] / self.nms_pred[-1][1])
             elif self.nms_pred[-1][0]:
                 self.nms_pred[-1].append(1)
             else:
                 self.nms_pred[-1].append(0)
-
 
     def evaluate(self, img_ids=None):
         predicted = np.sum(self.pred, axis=0) / len(self.pred)
@@ -182,8 +184,90 @@ class ClassCountEvaluator(COCOEvaluator):
         }
         return results
 
-def main():
 
+def run_on_individual_test_data():
+    from configure_parameters import register_seeds
+    image_path = os.path.join(REPO_PATH, "datasets/dataset1/all_images")
+    train = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/train.json")
+    test = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/test.json")
+    val = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/val.json")
+
+    # First make test jsons to register instances for individual images
+    test_json = json.load(open(test, 'r'))
+    for i in test_json['images']:
+        new_test_json = test_json.copy()
+        new_test_json['images'] = [i]
+        id = i['id']
+        new_annotations = []
+        for a in test_json['annotations']:
+            if a['image_id'] == id:
+                new_annotations.append(a)
+        new_test_json['annotations'] = new_annotations
+        json.dump(new_test_json,
+                  open(os.path.join(REPO_PATH, f"datasets/dataset1/coco_format/post_quality_check/model_data/single_images/{id}_test.json"), 'w'),
+                  indent=4)
+
+    per_image_results = []
+    for i in test_json['images']:
+        id = i['id']
+        test_path = os.path.join(os.path.join(REPO_PATH, f"datasets/dataset1/coco_format/post_quality_check/model_data/single_images/{id}_test.json"))
+        # Register dataset for individual image. needs new name setting too.
+        dataset_name = f'orchid_test_{id}'
+        register_seeds(image_path, train, test_path, val, dataset_name)
+
+        os.chdir(REPO_PATH)
+        config_path = "model_results_and_final_weights/final_tz_segmentor/config.yaml"
+
+        print("Getting model weights")
+
+        cfg = get_cfg()
+        cfg.merge_from_file(config_path)
+        if not torch.cuda.is_available():
+            cfg.MODEL.DEVICE = "cpu"
+        else:
+            cfg.MODEL.DEVICE = "cuda"
+
+        predictor = DefaultPredictor(cfg)
+        model = predictor.model
+        # Make sure model is in eval mode
+        model.eval()
+
+        data_loader = build_detection_test_loader(cfg, dataset_name)
+        coco_evaluator = COCOEvaluator(dataset_name, max_dets_per_image=800)
+        nms_evaluator = ClsAgnNMSEvaluator(dataset_name, 0.7, 800)
+        mae_evaluator = ClassCountEvaluator(dataset_name, 0.7, 800)
+        seed_seg_evaluator = SeedSegmentationEvaluator(dataset_name, 0.7, 800)
+        data_evaluators = DatasetEvaluators([
+            coco_evaluator,
+            nms_evaluator,
+            seed_seg_evaluator,
+            mae_evaluator,
+        ])
+
+        with torch.no_grad():
+            print("Running evaluation")
+            results = inference_on_dataset(model, data_loader, data_evaluators)
+            # print(results)
+
+            image_name = os.path.basename(i['file_name'])
+
+            ap_results = [results['segm_cls_agn_nms']['AP']] + [results['segm_cls_agn_nms']['AP-' + c] for c in ['Viable', 'Non-Viable', 'Empty']] + [
+                results['segm_seed_class']['AP']]
+            mae_scores = [results['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
+
+            per_image_results.append([image_name] + ap_results + mae_scores)
+            out_df = pd.DataFrame(per_image_results,
+                                  columns=['image_name'] + ['AP', 'AP-Viable', 'AP-Non-Viable', 'AP-Empty', 'AP-Seed'] + ['MAE-Viable',
+                                                                                                                          'MAE-Non-Viable',
+                                                                                                                          'MAE-Empty', 'MAE-Total'])
+            out_df.to_csv("model_results_and_final_weights/final_tz_segmentor/test_results_on_individual_images.csv", index=False)
+
+    out_df.loc['Mean'] = out_df.mean(axis=0, numeric_only=True)
+    out_df.loc['Std'] = out_df.std(axis=0, numeric_only=True)
+    out_df.to_csv("model_results_and_final_weights/final_tz_segmentor/test_results_on_individual_images.csv")
+
+
+def run_on_test_data():
     from configure_parameters import register_seeds
     image_path = os.path.join(REPO_PATH, "datasets/dataset1/all_images")
     train = os.path.join(REPO_PATH, "datasets/dataset1/coco_format/post_quality_check/model_data/train.json")
@@ -192,7 +276,7 @@ def main():
     register_seeds(image_path, train, test, val)
 
     os.chdir(REPO_PATH)
-    config_path = "model_weights/final_tz_segmentor/config.yaml"
+    config_path = "model_results_and_final_weights/final_tz_segmentor/config.yaml"
 
     print("Getting model weights")
 
@@ -205,27 +289,38 @@ def main():
 
     predictor = DefaultPredictor(cfg)
     model = predictor.model
+    # Make sure model is in eval mode
+    model.eval()
+
     dataset_name = "orchid_test"
 
     data_loader = build_detection_test_loader(cfg, dataset_name)
     coco_evaluator = COCOEvaluator(dataset_name, max_dets_per_image=800)
-    nms_evaluator = ClsAgnNMSEvaluator(dataset_name,0.7, 800)
+    nms_evaluator = ClsAgnNMSEvaluator(dataset_name, 0.7, 800)
     mae_evaluator = ClassCountEvaluator(dataset_name, 0.7, 800)
     seed_seg_evaluator = SeedSegmentationEvaluator(dataset_name, 0.7, 800)
-
-    print("Running evaluation")
-    results = inference_on_dataset(model, data_loader,
-                                   DatasetEvaluators([
-                                       coco_evaluator,
-                                       nms_evaluator,
-                                       seed_seg_evaluator,
-                                       mae_evaluator,
-                                   ]))
+    data_evaluators = DatasetEvaluators([
+        coco_evaluator,
+        nms_evaluator,
+        seed_seg_evaluator,
+        mae_evaluator,
+    ])
+    with torch.no_grad():
+        print("Running evaluation")
+        results = inference_on_dataset(model, data_loader, data_evaluators)
     print(results)
 
-    with open("model_weights/final_tz_segmentor/final_evaluation_metrics.json", "w") as f:
+    with open("model_results_and_final_weights/final_tz_segmentor/final_evaluation_metrics.json", "w") as f:
         json.dump(results, f, indent=4)
 
 
+def main():
+    # run_on_test_data()
+    run_on_individual_test_data()
+
+
 if __name__ == "__main__":
+    if not torch.cuda.is_available():
+        print("No GPU available, using CPU")
+
     main()

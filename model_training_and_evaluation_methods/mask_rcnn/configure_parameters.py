@@ -8,6 +8,7 @@ from detectron2.config import get_cfg
 from detectron2.data.datasets import register_coco_instances
 from detectron2.utils.logger import setup_logger
 
+
 def mean_and_std(img_path):
     """
     Calculates the mean and standard deviation of the BGR channels of the whole dataset.
@@ -30,6 +31,7 @@ def mean_and_std(img_path):
            for s in range(3)]
 
     return mean, std
+
 
 def images_per_class(annotations_path):
     """
@@ -60,7 +62,8 @@ def images_per_class(annotations_path):
 
     return image_counts
 
-def register_seeds(img_path, train_annotations=None, test_annotations=None, val_annotations=None):
+
+def register_seeds(img_path, train_annotations=None, test_annotations=None, val_annotations=None, test_data_name: str = 'orchid_test'):
     """
     Runs the register_coco_instances() function on any combination of training, testing, and validation datasets.
     :param      img_path: (string) Path to all images.
@@ -77,7 +80,7 @@ def register_seeds(img_path, train_annotations=None, test_annotations=None, val_
                                 },
                                 train_annotations, img_path)
     if test_annotations:
-        register_coco_instances('orchid_test',
+        register_coco_instances(test_data_name,
                                 {
                                     "thing_classes": ['Viable', 'Non-Viable', 'Empty'],
                                     "thing_colors": [(255, 0, 0), (255, 255, 0), (0, 0, 0)],
@@ -92,6 +95,7 @@ def register_seeds(img_path, train_annotations=None, test_annotations=None, val_
                                     "class_image_count": images_per_class(val_annotations)
                                 },
                                 val_annotations, img_path)
+
 
 def build_config(img_path, model_name="", **kwargs):
     # set up the logger

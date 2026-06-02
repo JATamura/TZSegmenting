@@ -107,7 +107,7 @@ if __name__ == "__main__":
     # register the training, validation, and test datasets into COCO
     register_seeds(image_path, train_annotations=train_and_val, test_annotations=None, val_annotations=test)
 
-    config_path = "model_weights/final_tz_segmentor/config.yaml"
+    config_path = "model_results_and_final_weights/final_tz_segmentor/config.yaml"
 
     param_dict = {
         "cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST": 0.5,

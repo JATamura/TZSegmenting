@@ -3,9 +3,57 @@ import os.path
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from utils import REPO_PATH
 
+
+def make_graph_from_final_training():
+    raise NotImplementedError('Iteration data is not well formatted.')
+    metrics = ['total_loss', 'segm_cls_agn_nms/AP']
+
+    metric_iteration_dict = {}
+
+    with open(os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor', 'metrics.json'), 'r') as f:
+        lines = f.read().splitlines()
+    copies = []
+    for l in lines:
+        line_dict = json.loads(l)
+        if line_dict['iteration'] ==19:
+            copies.append(line_dict)
+
+    done_iters = []
+    for l in lines:
+        line_dict = json.loads(l)
+        line_results = []
+        for m in metrics:
+
+            try:
+                result = line_dict[m]
+            except KeyError:
+                result = np.nan
+            line_results.append(result)
+        iteration = line_dict['iteration']
+        if iteration in done_iters:
+           print(f'Duplicate iteration {iteration}')
+        done_iters.append(iteration)
+        try:
+            line_results.append(line_dict['data_time'])
+        except KeyError:
+            line_results.append(np.nan)
+        metric_iteration_dict[iteration] = line_results
+
+    # make a dataframe from metric_iteration_dict
+    plot_df = pd.DataFrame(metric_iteration_dict).T
+    plot_df.columns =metrics + ['data_time']
+
+    plot_df['iteration'] = plot_df.index
+    # make a seaborn plot of the total_loss
+    import seaborn as sns
+    sns.set_theme(style="whitegrid")
+    sns.lineplot(data=plot_df, x='iteration', y='total_loss')
+    plt.savefig(os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor', 'training_total_loss.png'))
+    print(metric_iteration_dict)
 
 def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_path: str):
     # base_/nms_ prefixes indicate outputs without/with non-max suppression
@@ -59,9 +107,11 @@ def make_tables_from_results_json(metrics_json_path: str, test_dataset_summary_p
     out_df.to_csv(metrics_json_path.replace('.json', '_readable_summary.csv'))
 
 
-
+def main():
+    # make_tables_from_results_json(os.path.join(REPO_PATH, 'model_results_and_final_weights', 'final_tz_segmentor', 'final_evaluation_metrics.json'),
+    #                               os.path.join(REPO_PATH, 'datasets', 'dataset1', 'seed_stats', 'post_quality_check', 'model_data',
+    #                                            'test_stats_summary.csv'))
+    make_graph_from_final_training()
 
 if __name__ == '__main__':
-    make_tables_from_results_json(os.path.join(REPO_PATH, 'model_weights', 'final_tz_segmentor', 'final_evaluation_metrics.json'),
-                                  os.path.join(REPO_PATH, 'datasets', 'dataset1', 'seed_stats', 'post_quality_check', 'model_data',
-                                               'test_stats_summary.csv'))
+    main()

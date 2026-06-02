@@ -37,7 +37,7 @@ def main():
     register_seeds(image_path, train_annotations=train, test_annotations=os.path.join(REPO_PATH, 'agreement_analysis', 'post_quality_check',
                                                                                       "annotations_images_in_analysis_and_test_set.json"))
 
-    config_path = "model_weights/final_tz_segmentor/config.yaml"
+    config_path = "model_results_and_final_weights/final_tz_segmentor/config.yaml"
 
     print("Getting model weights")
 

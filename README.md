@@ -35,8 +35,8 @@ that we hope to provide a more detailed analysis of in a publication soon.
 #### Results
 
 A summary of model performance on the final test set can be found in this repository
-at [final_evaluation_metrics_readable_summary.csv](model_weights/final_tz_segmentor/final_evaluation_metrics_readable_summary.csv), 
-with full metrics given in [final_evaluation_metrics.json](model_weights/final_tz_segmentor/final_evaluation_metrics.json).
+at [final_evaluation_metrics_readable_summary.csv](model_results_and_final_weights/final_tz_segmentor/final_evaluation_metrics_readable_summary.csv), 
+with full metrics given in [final_evaluation_metrics.json](model_results_and_final_weights/final_tz_segmentor/final_evaluation_metrics.json).
 
 To briefly summarise these results, first we focus on the AP score. AP indicates model performance in both segmenting and classifying object
 instances. This is a difficult metric to interpret, but is the focus for improving and comparing models. Our model achieves an AP of 29.55 in the
