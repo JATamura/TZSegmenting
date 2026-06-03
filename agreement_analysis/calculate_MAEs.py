@@ -95,7 +95,7 @@ def analyse(pre_or_post: str, test_images=None):
 
     out_df = pd.DataFrame(
         {'MAE': [viable_mae, nonviable_mae, empty_mae, seed_mae],
-         'Mean actual count per image': [total_counts_in_final_data['viable'] / image_count, total_counts_in_final_data['nonviable'] / image_count,
+         'Per-Image Mean in GT': [total_counts_in_final_data['viable'] / image_count, total_counts_in_final_data['nonviable'] / image_count,
                                          total_counts_in_final_data['empty'] / image_count, total_counts_in_final_data['seeds'] / image_count]},
         index=['Viable', 'Non-Viable', 'Empty', 'Seed'])
 
@@ -108,7 +108,7 @@ def analyse(pre_or_post: str, test_images=None):
 
         mae_scores = [data['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
         out_df['Model_MAE_on_analysis_images'] = mae_scores
-        out_df = out_df[['MAE', 'Model_MAE_on_analysis_images', 'Mean actual count per image']]
+        out_df = out_df[['MAE', 'Model_MAE_on_analysis_images', 'Per-Image Mean in GT']]
     else:
         filename = 'MAEs.csv'
 

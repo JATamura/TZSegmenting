@@ -255,11 +255,17 @@ def run_on_individual_test_data():
                 results['segm_seed_class']['AP']]
             mae_scores = [results['nms_maes'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
 
-            per_image_results.append([image_name] + ap_results + mae_scores)
+            raw_counts = [results['nms_raw_values'][c] for c in ['viable', 'non_viable', 'empty', 'total']]
+
+            per_image_results.append([image_name] + ap_results + mae_scores + raw_counts)
             out_df = pd.DataFrame(per_image_results,
                                   columns=['image_name'] + ['AP', 'AP-Viable', 'AP-Non-Viable', 'AP-Empty', 'AP-Seed'] + ['MAE-Viable',
                                                                                                                           'MAE-Non-Viable',
-                                                                                                                          'MAE-Empty', 'MAE-Total'])
+                                                                                                                          'MAE-Empty',
+                                                                                                                          'MAE-Total'] + [
+                                              'Predicted Viable',
+                                              'Predicted Non-Viable',
+                                              'Predicted Empty', 'Predicted Total'])
             out_df.to_csv("model_results_and_final_weights/final_tz_segmentor/test_results_on_individual_images.csv", index=False)
 
     out_df.to_csv("model_results_and_final_weights/final_tz_segmentor/test_results_on_individual_images.csv")
