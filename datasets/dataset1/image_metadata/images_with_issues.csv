@@ -1,0 +1,5 @@
+,file_name,number_of_annotations,img_dict,reason
+0,283.jpg,1089,"{'id': 283, 'width': 2560, 'height': 2048, 'file_name': '283.jpg', 'license': 0, 'flickr_url': '', 'coco_url': '', 'date_captured': 0}",>800 annotations
+1,284.jpg,976,"{'id': 284, 'width': 2560, 'height': 2048, 'file_name': '284.jpg', 'license': 0, 'flickr_url': '', 'coco_url': '', 'date_captured': 0}",>800 annotations
+2,425.jpg,114,"{'id': 425, 'width': 2560, 'height': 2048, 'file_name': '425.jpg', 'license': 0, 'flickr_url': '', 'coco_url': '', 'date_captured': 0}",dark seed coat
+3,481.jpg,0,"{'id': 481, 'width': 2560, 'height': 2048, 'file_name': '481.jpg', 'license': 0, 'flickr_url': '', 'coco_url': '', 'date_captured': 0}",dark seed coat

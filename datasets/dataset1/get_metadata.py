@@ -26,10 +26,23 @@ def main():
         return get_img_resolution(os.path.join('all_images',filename))
 
     filenme_translation['width'], filenme_translation['height'] = zip(*filenme_translation['filename'].apply(get_img_resolution_from_filename))
+    filenme_translation['resolutions'] = filenme_translation[['width','height']].apply(lambda x: '_'.join([str(i) for i in x]), axis=1)
 
-    out_df = pd.merge(filenme_translation,meta_data_input,how='left' , on='Serial_number')
-    assert len(out_df) == 522
-    out_df.to_csv('metadata.csv',index=False)
+    # All taken images
+    all_images_df = pd.merge(filenme_translation,meta_data_input,how='left' , on='Serial_number')
+    assert len(all_images_df) == 522
+
+    # Images used after removing 4 problem images
+    images_with_issues = pd.read_csv('image_metadata/images_with_issues.csv')
+    final_images = all_images_df[~all_images_df['filename'].isin(images_with_issues['file_name'])]
+
+    all_images_df.to_csv('image_metadata/all_metadata.csv',index=False)
+    final_images.to_csv('image_metadata/final_image_metadata.csv',index=False)
+
+    print(final_images['resolutions'].unique())
+
+    final_images.describe(include='all').to_csv('image_metadata/final_image_metadata_summary.csv')
+    all_images_df.describe(include='all').to_csv('image_metadata/all_image_metadata_summary.csv')
 
 
 if __name__ == '__main__':

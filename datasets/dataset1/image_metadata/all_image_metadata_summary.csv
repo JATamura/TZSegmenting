@@ -1,0 +1,12 @@
+,Photo_ID,Original_ID,Serial_number,filename,width,height,resolutions,Catalogue_number,Accepted Name,Genus,Species,Abbreviation,Subspecific Taxon Text,Authorship,Verification Status
+count,522.0,522,522.0,522,522.0,522.0,522,517,517,517,495,22,22,517,517
+unique,,444,,522,,,7,107,87,40,79,1,3,49,5
+top,,784720_01,,001.jpg,,,2560_2048,K:MSB-000641319,Cymbidium bicolor,Polystachya,bicolor,subsp.,pubescens,Lindl.,Verified by Kew
+freq,,2,,1,,,491,18,26,78,37,22,11,108,348
+mean,261.5,,687821.6781609196,,2547.7394636015324,2034.6053639846743,,,,,,,,,
+std,150.83268876473693,,164888.57660948843,,124.79182332589562,100.94509924401271,,,,,,,,,
+min,1.0,,288424.0,,1280.0,1024.0,,,,,,,,,
+25%,131.25,,641319.0,,2560.0,2048.0,,,,,,,,,
+50%,261.5,,696272.0,,2560.0,2048.0,,,,,,,,,
+75%,391.75,,814332.25,,2560.0,2048.0,,,,,,,,,
+max,522.0,,1037685.0,,2560.0,2048.0,,,,,,,,,

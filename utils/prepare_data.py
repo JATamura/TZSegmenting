@@ -503,29 +503,29 @@ def create_nice_data_summary_table():
     all_model_data.describe(include="all").round(2).to_csv('../datasets/dataset1/seed_stats/post_quality_check/model_data/all_model_data_summary.csv')
 
     viable_row = pd.Series({
-            "Train": f'{train_model_data['viable'].mean().round(2)} ({train_model_data['viable'].std().round(2)})',
-            "Validation": f'{val_model_data['viable'].mean().round(2)} ({val_model_data['viable'].std().round(2)})',
-            "Test": f'{test_model_data['viable'].mean().round(2)} ({test_model_data['viable'].std().round(2)})',
-            "Total": f'{all_model_data['viable'].mean().round(2)} ({all_model_data['viable'].std().round(2)})'
+            "Train": f"{train_model_data['viable'].mean().round(2)} ({train_model_data['viable'].std().round(2)})",
+            "Validation": f"{val_model_data['viable'].mean().round(2)} ({val_model_data['viable'].std().round(2)})",
+            "Test": f"{test_model_data['viable'].mean().round(2)} ({test_model_data['viable'].std().round(2)})",
+            "Total": f"{all_model_data['viable'].mean().round(2)} ({all_model_data['viable'].std().round(2)})"
         })
     non_viable_row = pd.Series({
-            "Train": f'{train_model_data['nonviable'].mean().round(2)} ({train_model_data['nonviable'].std().round(2)})',
-            "Validation": f'{val_model_data['nonviable'].mean().round(2)} ({val_model_data['nonviable'].std().round(2)})',
-            "Test": f'{test_model_data['nonviable'].mean().round(2)} ({test_model_data['nonviable'].std().round(2)})',
-            "Total": f'{all_model_data['nonviable'].mean().round(2)} ({all_model_data['nonviable'].std().round(2)})'
+            "Train": f"{train_model_data['nonviable'].mean().round(2)} ({train_model_data['nonviable'].std().round(2)})",
+            "Validation": f"{val_model_data['nonviable'].mean().round(2)} ({val_model_data['nonviable'].std().round(2)})",
+            "Test": f"{test_model_data['nonviable'].mean().round(2)} ({test_model_data['nonviable'].std().round(2)})",
+            "Total": f"{all_model_data['nonviable'].mean().round(2)} ({all_model_data['nonviable'].std().round(2)})"
         })
     empty_row = pd.Series({
-            "Train": f'{train_model_data['empty'].mean().round(2)} ({train_model_data['empty'].std().round(2)})',
-            "Validation": f'{val_model_data['empty'].mean().round(2)} ({val_model_data['empty'].std().round(2)})',
-            "Test": f'{test_model_data['empty'].mean().round(2)} ({test_model_data['empty'].std().round(2)})',
-            "Total": f'{all_model_data['empty'].mean().round(2)} ({all_model_data['empty'].std().round(2)})'
+            "Train": f"{train_model_data['empty'].mean().round(2)} ({train_model_data['empty'].std().round(2)})",
+            "Validation": f"{val_model_data['empty'].mean().round(2)} ({val_model_data['empty'].std().round(2)})",
+            "Test": f"{test_model_data['empty'].mean().round(2)} ({test_model_data['empty'].std().round(2)})",
+            "Total": f"{all_model_data['empty'].mean().round(2)} ({all_model_data['empty'].std().round(2)})"
     })
 
     seed_row = pd.Series({
-            "Train": f'{train_model_data['total'].mean().round(2)} ({train_model_data['total'].std().round(2)})',
-            "Validation": f'{val_model_data['total'].mean().round(2)} ({val_model_data['total'].std().round(2)})',
-            "Test": f'{test_model_data['total'].mean().round(2)} ({test_model_data['total'].std().round(2)})',
-            "Total": f'{all_model_data['total'].mean().round(2)} ({all_model_data['total'].std().round(2)})'
+            "Train": f"{train_model_data['total'].mean().round(2)} ({train_model_data['total'].std().round(2)})",
+            "Validation": f"{val_model_data['total'].mean().round(2)} ({val_model_data['total'].std().round(2)})",
+            "Test": f"{test_model_data['total'].mean().round(2)} ({test_model_data['total'].std().round(2)})",
+            "Total": f"{all_model_data['total'].mean().round(2)} ({all_model_data['total'].std().round(2)})"
     })
 
     out_df = pd.DataFrame(columns=['Train', 'Validation', 'Test', 'Total'])
@@ -610,16 +610,16 @@ def main():
         # Remove images with excess number of seeds
         annotations = extract_annotations(post_qc_dataset["annotations"], img["id"])
         if len(annotations) > 800:
-            imgs_with_issues.append((img["file_name"], len(annotations), img))
+            imgs_with_issues.append((img["file_name"], len(annotations), img, ">800 annotations"))
         # Remove 2 images with dark seed coats manually
-        if img["file_name"] == "425.jpg":
-            imgs_with_issues.append((img["file_name"], len(annotations), img))
-        if img["file_name"] == "481.jpg":
-            imgs_with_issues.append((img["file_name"], len(annotations), img))
+        if img["file_name"] in ["425.jpg", "481.jpg"]:
+            imgs_with_issues.append((img["file_name"], len(annotations), img, 'dark seed coat'))
 
-    for file_name, object_count, img in imgs_with_issues:
+    for file_name, object_count, img, reason in imgs_with_issues:
         print(file_name + " was removed. It had " + str(object_count) + " objects.")
         post_qc_dataset["images"].remove(img)
+
+    pd.DataFrame(imgs_with_issues, columns =['file_name', 'number_of_annotations', 'img_dict', 'reason']).to_csv("../datasets/dataset1/image_metadata/images_with_issues.csv")
 
     # Stratify according to the post quality checked dataset
     print("Stratifying data")
