@@ -8,8 +8,8 @@ def get_img_resolution(img_path):
     return img.size
 
 def main():
-    meta_data_input = pd.read_excel('00_Dataset1_metadata.xlsx')
-    filenme_translation = pd.read_excel('Translation.xlsx')
+    meta_data_input = pd.read_excel('image_metadata/00_Dataset1_metadata.xlsx')
+    filenme_translation = pd.read_excel('image_metadata/Image_filename_translations.xlsx')
 
     def convert_int_to_filename(int_filename):
         if int_filename < 10:

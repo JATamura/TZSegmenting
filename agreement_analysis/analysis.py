@@ -56,7 +56,7 @@ def annotations_to_polygons(annotation_sets):
     return ann_to_polygon_sets
 
 
-def compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2, iou_threshold=0.5, image_name="", verbose=True):
+def compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2, iou_threshold, image_name="", verbose=True):
     """
     Given 2 sets of annotations, counts the number of annotations with differing levels of agreement in segmentation and classification (see return values)
     :param      ann_to_polygon_1: (list dict) Annotations made by an annotator and their corresponding polygons. Assumes all segmentations are in COCO formatting and not RLE.
@@ -123,7 +123,7 @@ def compare_annotations_2(ann_to_polygon_1, ann_to_polygon_2, iou_threshold=0.5,
     return same_label, different_label, undetected_label
 
 
-def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, iou_threshold=0.5, image_name="",
+def compare_annotations_3(ann_to_polygon_1, ann_to_polygon_2, ann_to_polygon_3, iou_threshold, image_name="",
                           verbose=True):
     """
     Given 3 sets of annotations, counts the number of annotations with differing levels of agreement in segmentation and classification (see return values)
@@ -573,5 +573,5 @@ def main(pre_or_post: str):
 
 
 if __name__ == "__main__":
-    main('pre')
+    # main('pre')
     main('post')

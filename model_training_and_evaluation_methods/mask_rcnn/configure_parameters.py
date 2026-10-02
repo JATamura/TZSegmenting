@@ -103,10 +103,10 @@ def build_config(img_path, model_name="", **kwargs):
     # initialise custom config
     cfg = get_cfg()
 
-    # Mask RCNN with ResNet101
+    # Mask RCNN with ResNet101+FPN
     # config = "COCO-InstanceSegmentation/mask_rcnn_R_101_FPN_3x.yaml"
 
-    # Mask RCNN with ResNeXt101
+    # Mask RCNN with ResNeXt101+FPN
     # config = "COCO-InstanceSegmentation/mask_rcnn_X_101_32x8d_FPN_3x.yaml"
 
     # Cascade Mask R-CNN

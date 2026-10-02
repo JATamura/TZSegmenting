@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 
-from agreement_analysis.analysis import get_agreement_analysis_annotations, annotations_to_polygons, compare_annotations_3, compare_annotations_2
+from agreement_analysis.analysis import get_agreement_analysis_annotations
 
 
 def get_counts_for_annotator(annotator_idx: int, agreement_analysis_annotations, image_name: str):

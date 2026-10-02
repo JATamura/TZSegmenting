@@ -319,7 +319,7 @@ def run_on_test_data():
 
 
 def main():
-    # run_on_test_data()
+    run_on_test_data()
     run_on_individual_test_data()
 
 
