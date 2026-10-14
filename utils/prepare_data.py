@@ -14,7 +14,17 @@ import cv2
 from pycocotools import mask as cocomask
 
 REPO_PATH = os.path.join(os.environ.get('KEWSCRATCHPATH'), 'TZSegmenting')
-
+LICENSE_ID = 1
+licences = [
+    {
+        "id": LICENSE_ID,
+        "name": "Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
+        "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    }
+]
+info = {'contributor': 'OrchAId project team and partners',
+        'description': 'Final, post-quality checking annotations in COCO format for images used to develop OrchAId model',
+        'year': '2026'}
 
 # Source: https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch/#create-custom-coco-dataset
 def rle_to_coco(annotation: dict) -> list[dict]:
@@ -80,9 +90,8 @@ def combine_preqc_datasets(path_to_annotations, output_path):
         with open(a, 'r') as file:
             all_annotations.append(json.load(file))
 
-    combined = {"licenses": [{"name": "", "id": 0, "url": ""}],
-                "info": {"contributor": "", "date_created": "",
-                         "description": "", "url": "", "version": "", "year": ""},
+    combined = {"licenses": licences,
+                "info": info,
                 "categories": [{"id": 1, "name": "Viable", "supercategory": ""},
                                {"id": 2, "name": "Non-Viable", "supercategory": ""},
                                {"id": 3, "name": "Empty", "supercategory": ""}],
@@ -151,9 +160,8 @@ def split_postqc_dataset(annotations_path, output_path):
             base_anns.append(ann)
 
     default = {
-        "licenses": [{"name": "", "id": 0, "url": ""}],
-        "info": {"contributor": "", "date_created": "",
-                 "description": "", "url": "", "version": "", "year": ""},
+        "licenses": licences,
+        "info": info,
         "categories": [{"id": 1, "name": "Viable", "supercategory": ""},
                        {"id": 2, "name": "Non-Viable", "supercategory": ""},
                        {"id": 3, "name": "Empty", "supercategory": ""}],
@@ -469,9 +477,8 @@ def combine_train_and_val(train_path, val_path, output_path):
     print(len([i["id"] for i in annotations]))
 
     combined = {
-        "licenses": [{"name": "", "id": 0, "url": ""}],
-        "info": {"contributor": "", "date_created": "",
-                 "description": "", "url": "", "version": "", "year": ""},
+        "licenses": licences,
+        "info": info,
         "categories": [{"id": 1, "name": "Viable", "supercategory": ""},
                        {"id": 2, "name": "Non-Viable", "supercategory": ""},
                        {"id": 3, "name": "Empty", "supercategory": ""}],
