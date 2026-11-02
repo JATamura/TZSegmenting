@@ -28,8 +28,14 @@ def main():
     filenme_translation['width'], filenme_translation['height'] = zip(*filenme_translation['filename'].apply(get_img_resolution_from_filename))
     filenme_translation['resolutions'] = filenme_translation[['width','height']].apply(lambda x: '_'.join([str(i) for i in x]), axis=1)
 
+
+    # Donor info
+    donor_info = pd.read_excel('image_metadata/donor_info.xlsx')[['Sequence','Donor']]
+    donor_info = donor_info.rename(columns={'Sequence': 'Serial_number'})
+
     # All taken images
     all_images_df = pd.merge(filenme_translation,meta_data_input,how='left' , on='Serial_number')
+    all_images_df = all_images_df.merge(donor_info, how='left', on='Serial_number')
     assert len(all_images_df) == 522
 
     # Images used after removing 4 problem images
